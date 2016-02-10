@@ -3,9 +3,31 @@
 	<head>
 		<title>Tresoar viewer</title>
 		<link rel="stylesheet" href="assets/semantic.css">
+		<link rel="stylesheet" href="assets/ol.css">
+		<style>
+			
+		</style>
 	</head>
 	<body>
-		<h1>Hello world</h1>
+		<div id="map" class="map"></div>
+
+		<script src="assets/jquery-2.2.0.min.js"></script>
 		<script src="assets/semantic.js"></script>
+		<script src="assets/ol.js"></script>
+
+		<script>
+			var map = new ol.Map({
+				layers: [
+					new ol.layer.Tile({
+						source: new ol.source.MapQuest({layer: 'sat'})
+					})
+				],
+				target: 'map',
+				view: new ol.View({
+					center: ol.proj.fromLonLat([-77.93255, 37.9555]),
+					zoom: 7
+				})
+			});
+		</script>
 	</body>
 </html>
