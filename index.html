@@ -72,6 +72,20 @@
 				}),
 				sat: new ol.layer.Tile({
 					source: new ol.source.MapQuest({layer: 'sat'})
+				}),
+				extents: new ol.layer.Tile({
+					source: new ol.source.WMTS({
+						url: 'http://geoserver.ikhoefgeen.nl/geoserver/gwc/service/wmts',
+						layer: 'geodienst:extents',
+						matrixSet: 'EPSG:28992',
+						format: 'image/png',
+						projection: projection,
+						tileGrid: new ol.tilegrid.WMTS({
+							origin: ol.extent.getTopLeft(projectionExtent),
+							resolutions: resolutions,
+							matrixIds: matrixIds
+						})
+					})
 				})
 			};
 
@@ -80,9 +94,9 @@
 				layers: [layers.brt],
 				target: 'map',
 				maxResolution: 860.16,
-		        numZoomLevels: 12,
-        		units: 'm',
-        		theme: null,
+				numZoomLevels: 12,
+				units: 'm',
+				theme: null,
 				displayProjection: EPSG28992,
 				view: new ol.View({
 					projection: EPSG28992,
