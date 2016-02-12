@@ -13,8 +13,20 @@
 	<body>
 		<div id="map" class="map"></div>
 
+		<div id="layers">
+			<ul class="layers">
+				<li class="layer">
+					<label>
+						<input type="checkbox" name="toggle">
+						<span class="layer-name"></span>
+					</label>
+					<input type="range" name="opacity" min="0" max="100" value="100">
+				</li>
+			</ul>
+		</div>
+
 		<script src="assets/jquery-2.2.0.min.js"></script>
-		
+		<script src="assets/transparency.min.js"></script>
 		
 		<script>
 			"use strict"
@@ -38,8 +50,8 @@
 				matrixIds[z] = 'EPSG:28992:' + z;
 			}
 			
-			var layers = [
-				new ol.layer.Tile({
+			var layers = {
+				brt: new ol.layer.Tile({
 					extent: projectionExtent,
 					source: new ol.source.WMTS({
 						url: 'http://geodata.nationaalgeoregister.nl/tiles/service/wmts/brtachtergrondkaart',
@@ -53,15 +65,15 @@
 							matrixIds: matrixIds
 						})
 					})
-				})
-				,new ol.layer.Tile({
+				}),
+				sat: new ol.layer.Tile({
 					source: new ol.source.MapQuest({layer: 'sat'})
 				})
-			];
-			
+			};
+
 			var map = new ol.Map({
 				maxExtent: projectionExtent,
-				layers: layers,
+				layers: [layers.brt],
 				target: 'map',
 				maxResolution: 860.16,
 		        numZoomLevels: 12,
@@ -73,6 +85,51 @@
 					center: ol.extent.getCenter(projectionExtent),
 					zoom: 8
 				})
+			});
+
+			// Render the list of layers (using Transparency.js templating)
+			$('#layers').render(
+				{ // values
+					layers: $.map(layers, function(layer, layerId) {
+						return {
+							layer: {
+								'id': layerId,
+								'layer-name': layerId
+							}
+						};
+					})
+				},
+				{ // directives on how to render this stuff
+					'layers': {
+						'layer': {
+							'data-layer-id': function() {
+								return this.layer.id;
+							}
+						},
+						'toggle': {
+							'checked': function () {
+								return map.getLayers().getArray().indexOf(layers[this.layer.id]) !== -1;
+							},
+							'value': function () {
+								return this.layer.id;
+							}
+						}
+					}
+				}
+			);
+
+			// Make stuff interactive
+			$('#layers').on('change', '.layer input[name=toggle]', function(e) {
+				if (this.checked) {
+					map.addLayer(layers[this.value]);
+				} else {
+					map.removeLayer(layers[this.value]);
+				}
+			});
+
+			$('#layers').on('change', '.layer input[name=opacity]', function(e) {
+				var layerId = $(this).closest('.layer').data('layerId');
+				layers[layerId].setOpacity(this.value / 100);
 			});
 		</script>
 	</body>

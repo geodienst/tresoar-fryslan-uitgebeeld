@@ -1,12 +1,28 @@
+* {
+	box-sizing: border-box;
+}
+
 html, body {
 	height: 100%;
 	margin: 0;
 }
 
-.map {
+#map {
 	position: absolute;
 	top: 0;
-	left: 0;
+	left: 200px;
 	bottom: 0;
 	right: 0;
+}
+
+#layers {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	width: 200px;
+}
+
+#layers .layer label {
+	cursor: pointer;
 }
