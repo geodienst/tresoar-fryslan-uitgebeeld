@@ -7,24 +7,71 @@
 		<title>Tresoar viewer</title>
 		<link rel="stylesheet" href="assets/ol.css">
 		<link rel="stylesheet" href="assets/viewer.css">
+		<script src="http://cdnjs.cloudflare.com/ajax/libs/proj4js/2.3.3/proj4.js" type="text/javascript"></script>
+		<script src="assets/ol-debug.js"></script>
 	</head>
 	<body>
 		<div id="map" class="map"></div>
 
 		<script src="assets/jquery-2.2.0.min.js"></script>
-		<script src="assets/ol.js"></script>
-
+		
+		
 		<script>
-			var map = new ol.Map({
-				layers: [
-					new ol.layer.Tile({
-						source: new ol.source.MapQuest({layer: 'sat'})
+			"use strict"
+
+			proj4.defs("EPSG:28992", "+proj=sterea +lat_0=52.15616055555555 +lon_0=5.38763888888889 +k=0.9999079 +x_0=155000 +y_0=463000  +ellps=bessel  +towgs84=565.040,49.910,465.840,-0.40939,0.35971,-1.86849,4.0772 +units=m +no_defs");
+		
+			var EPSG28992 = new ol.proj.Projection({
+				code: 'EPSG:28992'
+			});
+			
+			ol.proj.addProjection(EPSG28992);
+			
+			var projection = EPSG28992;
+			var projectionExtent = [-285401.92,22598.08,595401.9199999999,903401.9199999999];
+			var size = ol.extent.getWidth(projectionExtent) / 256;
+			var resolutions = [3440.64, 1720.32, 860.16, 430.08, 215.04, 107.52, 53.76, 26.88, 13.44, 6.72, 3.36, 1.68, 0.84, 0.42]
+			
+			// generate resolutions and matrixIds arrays for this WMTS
+			var matrixIds = new Array(resolutions.length);
+			for (var z = 0; z < matrixIds.length; ++z) {
+				matrixIds[z] = 'EPSG:28992:' + z;
+			}
+			
+			var layers = [
+				new ol.layer.Tile({
+					extent: projectionExtent,
+					source: new ol.source.WMTS({
+						url: 'http://geodata.nationaalgeoregister.nl/tiles/service/wmts/brtachtergrondkaart',
+						layer: 'brtachtergrondkaart',
+						matrixSet: 'EPSG:28992',
+						format: 'image/png',
+						projection: projection,
+						tileGrid: new ol.tilegrid.WMTS({
+							origin: ol.extent.getTopLeft(projectionExtent),
+							resolutions: resolutions,
+							matrixIds: matrixIds
+						})
 					})
-				],
+				})
+				,new ol.layer.Tile({
+					source: new ol.source.MapQuest({layer: 'sat'})
+				})
+			];
+			
+			var map = new ol.Map({
+				maxExtent: projectionExtent,
+				layers: layers,
 				target: 'map',
+				maxResolution: 860.16,
+		        numZoomLevels: 12,
+        		units: 'm',
+        		theme: null,
+				displayProjection: EPSG28992,
 				view: new ol.View({
-					center: ol.proj.fromLonLat([-77.93255, 37.9555]),
-					zoom: 7
+					projection: EPSG28992,
+					center: ol.extent.getCenter(projectionExtent),
+					zoom: 8
 				})
 			});
 		</script>
