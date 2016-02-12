@@ -11,6 +11,10 @@
 		<script src="assets/ol-debug.js"></script>
 	</head>
 	<body>
+		<div id="header">
+			<h1>Tresoar</h1>
+		</div>
+		
 		<div id="map" class="map"></div>
 
 		<div id="layers">
@@ -49,7 +53,7 @@
 			for (var z = 0; z < matrixIds.length; ++z) {
 				matrixIds[z] = 'EPSG:28992:' + z;
 			}
-			
+
 			var layers = {
 				brt: new ol.layer.Tile({
 					extent: projectionExtent,

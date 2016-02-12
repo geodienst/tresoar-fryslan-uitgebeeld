@@ -5,24 +5,55 @@
 html, body {
 	height: 100%;
 	margin: 0;
+	font: 14px/18px sans-serif;
+}
+
+#header {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 32px;
+	line-height: 32px;
+	padding: 0 5px;
+	z-index: 2;
+	background: rgba(255, 255, 255, 0.8);
+}
+
+#header h1 {
+	margin: 0;
 }
 
 #map {
 	position: absolute;
 	top: 0;
-	left: 200px;
+	left: 0;
 	bottom: 0;
 	right: 0;
 }
 
 #layers {
 	position: absolute;
-	top: 0;
+	top: 32px;
 	bottom: 0;
 	left: 0;
 	width: 200px;
+	padding: 0 5px;
+	z-index: 1;
+	background: rgba(255,255,255,0.8);
+}
+
+#layers .layers {
+	list-style: none;
+	padding: 0;
 }
 
 #layers .layer label {
 	cursor: pointer;
+	display: block;
+}
+
+#map .ol-zoom {
+	top: 42px;
+	left: 210px;
 }
