@@ -9,6 +9,8 @@
 		<link rel="stylesheet" href="assets/viewer.css">
 		<script src="assets/proj4.js" type="text/javascript"></script>
 		<script src="assets/ol-debug.js"></script>
+		<script src="assets/jquery-2.2.0.min.js"></script>
+		<script src="assets/transparency.min.js"></script>
 	</head>
 	<body>
 		<div id="header">
@@ -29,9 +31,6 @@
 			</ul>
 		</div>
 
-		<script src="assets/jquery-2.2.0.min.js"></script>
-		<script src="assets/transparency.min.js"></script>
-		
 		<script>
 			"use strict"
 
@@ -54,6 +53,11 @@
 				matrixIds[z] = 'EPSG:28992:' + z;
 			}
 
+			// FIXME it would be more awesome if we could retrieve this list (excl the base layers)
+			// from Geoserver directly (through GetCapabilities?)
+			
+			// Could we then also access the extents of each layer? Then we can filter the list by
+			// intersecting those with the current view extents.
 			var layers = {
 				brt: new ol.layer.Tile({
 					extent: projectionExtent,
@@ -70,9 +74,14 @@
 						})
 					})
 				}),
+				// FIXME I presume Nationaalgeoregister also has aerial photos of the Netherlands which 
+				// we can use.
 				sat: new ol.layer.Tile({
 					source: new ol.source.MapQuest({layer: 'sat'})
 				}),
+				// FIXME figure out how to get access to the extents layer, and if we can't get a list of
+				// extents from all the layers through Geoserver, we need access to all individual extents
+				// defined in this layer.
 				extents: new ol.layer.Tile({
 					source: new ol.source.WMTS({
 						url: 'http://geoserver.ikhoefgeen.nl/geoserver/gwc/service/wmts',
@@ -137,6 +146,7 @@
 			);
 
 			// Make stuff interactive
+
 			$('#layers').on('change', '.layer input[name=toggle]', function(e) {
 				if (this.checked) {
 					map.addLayer(layers[this.value]);
