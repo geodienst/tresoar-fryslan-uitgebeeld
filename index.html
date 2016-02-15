@@ -66,6 +66,7 @@
 					}
 			}
 
+
 			// FIXME it would be more awesome if we could retrieve this list (excl the base layers)
 			// from Geoserver directly (through GetCapabilities?)
 			
@@ -83,7 +84,6 @@
               			html: 'Kaartgegevens: © <a href="http://www.cbs.nl">CBS</a>, <a href="http://www.kadaster.nl">Kadaster</a>, <a href="http://openstreetmap.org">OpenStreetMap Bijdragers</a><span class="printhide"> (<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>)' +
               			' Kaartviewer: <a href="http://rug.nl/geo">Geodienst RUG</a>'
             			})],
-            			layertitle: 'Kaart',
 						projection: projection,
 						tileGrid: new ol.tilegrid.WMTS({
 							origin: ol.extent.getTopLeft(projectionExtent),
@@ -107,7 +107,6 @@
               			html: 'Luchtfoto: <a href="https://www.pdok.nl/nl/copyright/luchtfotos/" target="_blank">© PDOK CC-BY-NC</a>'+
               			' Kaartviewer: <a href="http://rug.nl/geo">Geodienst RUG</a>'
             			})],
-            			layertitle:'Luchtfoto',
 						projection: projection,
 						visibility: true,
 						zoomOffset: 2,
@@ -128,7 +127,6 @@
 						layer: 'geodienst:extents',
 						matrixSet: 'EPSG:28992',
 						format: 'image/png',
-						layertitle: 'extents',
 						projection: projection,
 						tileGrid: new ol.tilegrid.WMTS({
 							origin: ol.extent.getTopLeft(projectionExtent),
@@ -136,7 +134,9 @@
 							matrixIds: matrixIds
 						})
 					})
-				})
+				}),		
+
+				//http://geoportaal.fryslan.nl/arcgis/services/ProvinciaalGeoRegister/PGR_features/GeoDataServer/WFSServer?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=PGR:CHK2_StinzenStates&SRSNAME=EPSG:28992
 			};
 
 			var map = new ol.Map({
