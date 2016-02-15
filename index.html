@@ -53,6 +53,19 @@
 				matrixIds[z] = 'EPSG:28992:' + z;
 			}
 
+			//FIXME this is ugly 
+			//generate resolutions and matrixIds for luchtfoto
+			var matrixIds2 = [];
+			for (var i = 0;
+				i <= 13;
+				++i) {
+			 		if (i < 10) {
+			        	matrixIds2[i] = "0" + i;
+			 		} else {
+			 	    	 matrixIds2[i] = "" + i;
+					}
+			}
+
 			// FIXME it would be more awesome if we could retrieve this list (excl the base layers)
 			// from Geoserver directly (through GetCapabilities?)
 			
@@ -66,6 +79,11 @@
 						layer: 'brtachtergrondkaart',
 						matrixSet: 'EPSG:28992',
 						format: 'image/png',
+						attributions: [new ol.Attribution({
+              			html: 'Kaartgegevens: © <a href="http://www.cbs.nl">CBS</a>, <a href="http://www.kadaster.nl">Kadaster</a>, <a href="http://openstreetmap.org">OpenStreetMap Bijdragers</a><span class="printhide"> (<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>)' +
+              			' Kaartviewer: <a href="http://rug.nl/geo">Geodienst RUG</a>'
+            			})],
+            			layertitle: 'Kaart',
 						projection: projection,
 						tileGrid: new ol.tilegrid.WMTS({
 							origin: ol.extent.getTopLeft(projectionExtent),
@@ -74,11 +92,33 @@
 						})
 					})
 				}),
-				// FIXME I presume Nationaalgeoregister also has aerial photos of the Netherlands which 
-				// we can use.
-				sat: new ol.layer.Tile({
-					source: new ol.source.MapQuest({layer: 'sat'})
+
+				lufo: new ol.layer.Tile({
+					extent: projectionExtent,
+					source: new ol.source.WMTS({
+						url: 'http://geodata1.nationaalgeoregister.nl/luchtfoto/wmts',
+						service: 'WMTS',
+						version: "1.0.0",
+						layer: 'luchtfoto',
+						matrixSet: 'nltilingschema',
+						format: 'image/jpeg',
+						style: '',
+						attributions: [new ol.Attribution({
+              			html: 'Luchtfoto: <a href="https://www.pdok.nl/nl/copyright/luchtfotos/" target="_blank">© PDOK CC-BY-NC</a>'+
+              			' Kaartviewer: <a href="http://rug.nl/geo">Geodienst RUG</a>'
+            			})],
+            			layertitle:'Luchtfoto',
+						projection: projection,
+						visibility: true,
+						zoomOffset: 2,
+						tileGrid: new ol.tilegrid.WMTS({
+							origin: ol.extent.getTopLeft(projectionExtent),
+							resolutions: resolutions,
+							matrixIds: matrixIds2
+						})
+					})
 				}),
+
 				// FIXME figure out how to get access to the extents layer, and if we can't get a list of
 				// extents from all the layers through Geoserver, we need access to all individual extents
 				// defined in this layer.
@@ -88,6 +128,7 @@
 						layer: 'geodienst:extents',
 						matrixSet: 'EPSG:28992',
 						format: 'image/png',
+						layertitle: 'extents',
 						projection: projection,
 						tileGrid: new ol.tilegrid.WMTS({
 							origin: ol.extent.getTopLeft(projectionExtent),
@@ -110,7 +151,7 @@
 				view: new ol.View({
 					projection: EPSG28992,
 					center: ol.extent.getCenter(projectionExtent),
-					zoom: 8
+					zoom: 9
 				})
 			});
 
@@ -159,6 +200,15 @@
 				var layerId = $(this).closest('.layer').data('layerId');
 				layers[layerId].setOpacity(this.value / 100);
 			});
+
+			var geolocation = new ol.Geolocation({
+  // take the projection to use from the map's view
+  projection: view.getProjection()
+});
+// listen to changes in position
+geolocation.on('change', function(evt) {
+  window.console.log(geolocation.getPosition());
+});
 		</script>
 	</body>
 </html>
