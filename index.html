@@ -34,6 +34,14 @@
 		<script>
 			"use strict"
 
+			// Helper for jQuery.ajax and co. to easily use proxy server to go around CSRP
+			$.ajaxPrefilter(function(options) {
+				if (options.crossdomain) {
+					options.url = 'proxy.php?url=' + encodeURIComponent(options.url);
+					options.crossdomain = false;
+				}
+			});
+
 			proj4.defs("EPSG:28992", "+proj=sterea +lat_0=52.15616055555555 +lon_0=5.38763888888889 +k=0.9999079 +x_0=155000 +y_0=463000  +ellps=bessel  +towgs84=565.040,49.910,465.840,-0.40939,0.35971,-1.86849,4.0772 +units=m +no_defs");
 		
 			var EPSG28992 = new ol.proj.Projection({
@@ -130,7 +138,39 @@
 					})
 				}),		
 
+				// Example of WFS layer
 				//http://geoportaal.fryslan.nl/arcgis/services/ProvinciaalGeoRegister/PGR_features/GeoDataServer/WFSServer?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAME=PGR:CHK2_StinzenStates&SRSNAME=EPSG:28992
+				StinzenStates: new ol.layer.Vector({
+					source: new ol.source.Vector({
+						loader: function(extent, resolution, projection) {
+							$.ajax('http://geoportaal.fryslan.nl/arcgis/services/ProvinciaalGeoRegister/PGR_features/GeoDataServer/WFSServer', {
+								type: 'GET',
+								crossdomain: true,
+								data: {
+									service: 'WFS',
+									version: '1.0.0',
+									request: 'GetFeature',
+									typename: 'PGR:CHK2_StinzenStates',
+									srsname: 'EPSG:28992',
+									bbox: extent.join(',')
+								}
+							}).done(function(data) {
+								let format = new ol.format.GML2();
+								this.addFeatures(format.readFeatures(data));
+							}.bind(this));
+						},
+						strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({
+							maxZoom: 19
+						})),
+						projection: 'EPSG:28992'
+					}),
+					style: new ol.style.Style({
+						stroke: new ol.style.Stroke({
+							color: 'green',
+							width: 2
+						})
+					})
+				})
 			};
 
 			var map = new ol.Map({
@@ -205,48 +245,6 @@
 				window.console.log(geolocation.getPosition());
 			});
 
-			$.ajaxPrefilter(function(options) {
-				if (options.crossdomain) {
-					options.url = 'proxy.php?url=' + encodeURIComponent(options.url);
-					options.crossdomain = false;
-				}
-			});
-			
-			var vecSource = new ol.source.Vector({
-				loader: function(extent, resolution, projection) {
-					$.ajax('http://geoportaal.fryslan.nl/arcgis/services/ProvinciaalGeoRegister/PGR_features/GeoDataServer/WFSServer', {
-						type: 'GET',
-						crossdomain: true,
-						data: {
-							service: 'WFS',
-							version: '1.0.0',
-							request: 'GetFeature',
-							typename: 'PGR:CHK2_StinzenStates',
-							srsname: 'EPSG:28992',
-							bbox: extent.join(',')
-						}
-					}).done(function(data) {
-						let format = new ol.format.GML2();
-						vecSource.addFeatures(format.readFeatures(data));
-					});
-				},
-				strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({
-					maxZoom: 19
-				})),
-				projection: 'EPSG:28992'
-			});
-
-			var vecLayer = new ol.layer.Vector({
-				source: vecSource,
-				style: new ol.style.Style({
-					stroke: new ol.style.Stroke({
-						color: 'green',
-						width: 2
-					})
-				})
-			});
-
-			map.addLayer(vecLayer);
 
 		</script>
 	</body>
