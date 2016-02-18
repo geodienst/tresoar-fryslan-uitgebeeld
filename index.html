@@ -65,7 +65,7 @@
 			//generate resolutions and matrixIds for luchtfoto
 			var matrixIds2 = new Array(resolutions.length);
 			for (var i = 0; i <= 13; ++i) {
-		 		matrixIds2[i] = (i < 10 ? "0" : "") + i;
+				matrixIds2[i] = (i < 10 ? "0" : "") + i;
 			}
 
 
@@ -75,107 +75,82 @@
 			// Could we then also access the extents of each layer? Then we can filter the list by
 			// intersecting those with the current view extents.
 			var layers = {
-				brt: new ol.layer.Tile({
-					extent: projectionExtent,
-					source: new ol.source.WMTS({
-						url: 'http://geodata.nationaalgeoregister.nl/tiles/service/wmts/brtachtergrondkaart',
-						layer: 'brtachtergrondkaart',
-						matrixSet: 'EPSG:28992',
-						format: 'image/png',
-						attributions: [new ol.Attribution({
-              			html: 'Kaartgegevens: © <a href="http://www.cbs.nl">CBS</a>, <a href="http://www.kadaster.nl">Kadaster</a>, <a href="http://openstreetmap.org">OpenStreetMap Bijdragers</a><span class="printhide"> (<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>)' +
-              			' Kaartviewer: <a href="http://rug.nl/geo">Geodienst RUG</a>'
-            			})],
-						projection: projection,
-						tileGrid: new ol.tilegrid.WMTS({
-							origin: ol.extent.getTopLeft(projectionExtent),
-							resolutions: resolutions,
-							matrixIds: matrixIds
+				brt: {
+					name: 'BRT Achtergrondkaart',
+					layer: new ol.layer.Tile({
+						extent: projectionExtent,
+						source: new ol.source.WMTS({
+							url: 'http://geodata.nationaalgeoregister.nl/tiles/service/wmts/brtachtergrondkaart',
+							layer: 'brtachtergrondkaart',
+							matrixSet: 'EPSG:28992',
+							format: 'image/png',
+							attributions: [new ol.Attribution({
+							html: 'Kaartgegevens: © <a href="http://www.cbs.nl">CBS</a>, <a href="http://www.kadaster.nl">Kadaster</a>, <a href="http://openstreetmap.org">OpenStreetMap Bijdragers</a><span class="printhide"> (<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>)' +
+							' Kaartviewer: <a href="http://rug.nl/geo">Geodienst RUG</a>'
+							})],
+							projection: projection,
+							tileGrid: new ol.tilegrid.WMTS({
+								origin: ol.extent.getTopLeft(projectionExtent),
+								resolutions: resolutions,
+								matrixIds: matrixIds
+							})
 						})
 					})
-				}),
+				},
 
-				lufo: new ol.layer.Tile({
-					extent: projectionExtent,
-					source: new ol.source.WMTS({
-						url: 'http://geodata1.nationaalgeoregister.nl/luchtfoto/wmts',
-						service: 'WMTS',
-						version: "1.0.0",
-						layer: 'luchtfoto',
-						matrixSet: 'nltilingschema',
-						format: 'image/jpeg',
-						style: '',
-						attributions: [new ol.Attribution({
-              			html: 'Luchtfoto: <a href="https://www.pdok.nl/nl/copyright/luchtfotos/" target="_blank">© PDOK CC-BY-NC</a>'+
-              			' Kaartviewer: <a href="http://rug.nl/geo">Geodienst RUG</a>'
-            			})],
-						projection: projection,
-						visibility: true,
-						zoomOffset: 2,
-						tileGrid: new ol.tilegrid.WMTS({
-							origin: ol.extent.getTopLeft(projectionExtent),
-							resolutions: resolutions,
-							matrixIds: matrixIds2
+				lufo: {
+					name: 'Luchtfoto\'s',
+					layer: new ol.layer.Tile({
+						extent: projectionExtent,
+						source: new ol.source.WMTS({
+							url: 'http://geodata1.nationaalgeoregister.nl/luchtfoto/wmts',
+							service: 'WMTS',
+							version: "1.0.0",
+							layer: 'luchtfoto',
+							matrixSet: 'nltilingschema',
+							format: 'image/jpeg',
+							style: '',
+							attributions: [new ol.Attribution({
+							html: 'Luchtfoto: <a href="https://www.pdok.nl/nl/copyright/luchtfotos/" target="_blank">© PDOK CC-BY-NC</a>'+
+							' Kaartviewer: <a href="http://rug.nl/geo">Geodienst RUG</a>'
+							})],
+							projection: projection,
+							visibility: true,
+							zoomOffset: 2,
+							tileGrid: new ol.tilegrid.WMTS({
+								origin: ol.extent.getTopLeft(projectionExtent),
+								resolutions: resolutions,
+								matrixIds: matrixIds2
+							})
 						})
 					})
-				}),
+				},
 
 				// FIXME figure out how to get access to the extents layer, and if we can't get a list of
 				// extents from all the layers through Geoserver, we need access to all individual extents
 				// defined in this layer.
-				extents: new ol.layer.Tile({
-					source: new ol.source.WMTS({
-						url: 'http://geoserver.ikhoefgeen.nl/geoserver/gwc/service/wmts',
-						layer: 'geodienst:extents',
-						matrixSet: 'EPSG:28992',
-						format: 'image/png',
-						projection: projection,
-						tileGrid: new ol.tilegrid.WMTS({
-							origin: ol.extent.getTopLeft(projectionExtent),
-							resolutions: resolutions,
-							matrixIds: matrixIds
+				extents: {
+					name: 'Geoserver example',
+					layer: new ol.layer.Tile({
+						source: new ol.source.WMTS({
+							url: 'http://geoserver.ikhoefgeen.nl/geoserver/gwc/service/wmts',
+							layer: 'geodienst:extents',
+							matrixSet: 'EPSG:28992',
+							format: 'image/png',
+							projection: projection,
+							tileGrid: new ol.tilegrid.WMTS({
+								origin: ol.extent.getTopLeft(projectionExtent),
+								resolutions: resolutions,
+								matrixIds: matrixIds
+							})
 						})
 					})
-				}),		
-
-				// Example of WFS layer
-				//http://geoportaal.fryslan.nl/arcgis/services/ProvinciaalGeoRegister/PGR_features/GeoDataServer/WFSServer?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAME=PGR:CHK2_StinzenStates&SRSNAME=EPSG:28992
-				StinzenStates: new ol.layer.Vector({
-					source: new ol.source.Vector({
-						loader: function(extent, resolution, projection) {
-							$.ajax('http://geoportaal.fryslan.nl/arcgis/services/ProvinciaalGeoRegister/PGR_features/GeoDataServer/WFSServer', {
-								type: 'GET',
-								crossdomain: true,
-								data: {
-									service: 'WFS',
-									version: '1.0.0',
-									request: 'GetFeature',
-									typename: 'PGR:CHK2_StinzenStates',
-									srsname: 'EPSG:28992',
-									bbox: extent.join(',')
-								}
-							}).done(function(data) {
-								let format = new ol.format.GML2();
-								this.addFeatures(format.readFeatures(data));
-							}.bind(this));
-						},
-						strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({
-							maxZoom: 19
-						})),
-						projection: 'EPSG:28992'
-					}),
-					style: new ol.style.Style({
-						stroke: new ol.style.Stroke({
-							color: 'green',
-							width: 2
-						})
-					})
-				})
+				}
 			};
 
 			var map = new ol.Map({
 				maxExtent: projectionExtent,
-				layers: [layers.brt],
+				layers: [],
 				target: 'map',
 				maxResolution: 860.16,
 				numZoomLevels: 12,
@@ -190,49 +165,86 @@
 			});
 
 			// Render the list of layers (using Transparency.js templating)
-			$('#layers').render(
-				{ // values
-					layers: $.map(layers, function(layer, layerId) {
-						return {
-							layer: {
-								'id': layerId,
-								'layer-name': layerId
-							}
-						};
-					})
-				},
-				{ // directives on how to render this stuff
-					'layers': {
-						'layer': {
-							'data-layer-id': function() {
-								return this.layer.id;
-							}
-						},
-						'toggle': {
-							'checked': function () {
-								return map.getLayers().getArray().indexOf(layers[this.layer.id]) !== -1;
+			function updateLayerList() {
+				$('#layers').render(
+					{ // values
+						layers: $.map(layers, function(layer, layerId) {
+							console.log(layer);
+							return {
+								layer: {
+									'id': layerId,
+									'layer-name': layer.name
+								}
+							};
+						})
+					},
+					{ // directives on how to render this stuff
+						'layers': {
+							'layer': {
+								'data-layer-id': function() {
+									return this.layer.id;
+								}
 							},
-							'value': function () {
-								return this.layer.id;
+							'toggle': {
+								'checked': function () {
+									return map.getLayers().getArray().indexOf(layers[this.layer.id]) !== -1;
+								},
+								'value': function () {
+									return this.layer.id;
+								}
 							}
 						}
 					}
-				}
-			);
+				);
+			}
+
+			updateLayerList();
+
+			var featureOverlay = new ol.layer.Vector({
+				map: map,
+				source: new ol.source.Vector({
+					features: new ol.Collection(),
+					useSpatialIndex: false
+				}),
+				style: new ol.style.Style({
+					stroke: new ol.style.Stroke({
+						color: 'red',
+						width: 2
+					})
+				}),
+				updateWhileAnimating: true,
+				updateWhileInteracting: true
+			});
 
 			// Make stuff interactive
 
 			$('#layers').on('change', '.layer input[name=toggle]', function(e) {
 				if (this.checked) {
-					map.addLayer(layers[this.value]);
+					map.addLayer(layers[this.value].layer);
 				} else {
-					map.removeLayer(layers[this.value]);
+					map.removeLayer(layers[this.value].layer);
 				}
 			});
 
 			$('#layers').on('change', '.layer input[name=opacity]', function(e) {
 				var layerId = $(this).closest('.layer').data('layerId');
-				layers[layerId].setOpacity(this.value / 100);
+				layers[layerId].layer.setOpacity(this.value / 100);
+			});
+
+			$('#layers').on('mouseover', '.layer', function(e) {
+				var layerId = $(this).data('layerId');
+				var layer = layers[layerId];
+				if (layer.bbox) {
+					featureOverlay.getSource().addFeature(layer.bbox);
+				}
+			});
+
+			$('#layers').on('mouseout', '.layer', function(e) {
+				var layerId = $(this).data('layerId');
+				var layer = layers[layerId];
+				if (layer.bbox) {
+					featureOverlay.getSource().removeFeature(layer.bbox);
+				}
 			});
 
 			var geolocation = new ol.Geolocation({
@@ -245,6 +257,103 @@
 				window.console.log(geolocation.getPosition());
 			});
 
+			$.ajax('http://geoportaal.fryslan.nl/arcgis/services/ProvinciaalGeoRegister/PGR_features/GeoDataServer/WFSServer', {
+				type: 'GET',
+				crossdomain: true,
+				dataType: 'xml',
+				data: {
+					service: 'WFS',
+					version: '1.0.0',
+					request: 'GetCapabilities'
+				}
+			}).done(function(data) {
+				var features = $(data).find('FeatureTypeList').map(function() {
+					return $(this).find('FeatureType').map(function() {
+						var $feature = $(this),
+							$bbox = $feature.find('LatLongBoundingBox');
+
+						var bbox = $bbox.length ? new ol.Feature({
+							typename: $feature.find('Name').text(),
+							geometry: new ol.geom.Polygon([[
+								[$bbox.attr('minx'), $bbox.attr('miny')].map(parseFloat),
+								[$bbox.attr('maxx'), $bbox.attr('miny')].map(parseFloat),
+								[$bbox.attr('maxx'), $bbox.attr('maxy')].map(parseFloat),
+								[$bbox.attr('minx'), $bbox.attr('maxy')].map(parseFloat)
+							]], 'XY')
+						}) : null;
+
+						// Ugly side-effect implementation
+						layers[$feature.find('Title').text()] = {
+							name: $feature.find('Title').text(),
+							bbox: bbox,
+							layer: new ol.layer.Vector({
+								source: new ol.source.Vector({
+									loader: function(extent, resolution, projection) {
+										$.ajax('http://geoportaal.fryslan.nl/arcgis/services/ProvinciaalGeoRegister/PGR_features/GeoDataServer/WFSServer', {
+											type: 'GET',
+											crossdomain: true,
+											data: {
+												service: 'WFS',
+												version: '1.0.0',
+												request: 'GetFeature',
+												typename: $feature.find('Name').text(),
+												srsname: 'EPSG:28992', // todo: get this info from $feature?
+												bbox: extent.join(',')
+											}
+										}).done(function(data) {
+											var format = new ol.format.GML2();
+											this.addFeatures(format.readFeatures(data));
+										}.bind(this));
+									},
+									strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({
+										maxZoom: 19
+									})),
+									projection: 'EPSG:28992'
+								}),
+								style: new ol.style.Style({
+									stroke: new ol.style.Stroke({
+										color: 'green',
+										width: 2
+									})
+								})
+							})
+						};
+
+						return bbox;
+					}).get();
+				}).get();
+
+				var featureLayer = new ol.layer.Vector({
+					source: new ol.source.Vector({
+						features: features,
+						strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({
+							maxZoom: 19
+						})),
+						projection: 'EPSG:28992',
+						attributions: [new ol.Attribution({
+							html: 'Feature bboxes'
+						})],
+					}),
+					style: new ol.style.Style({
+						stroke: new ol.style.Stroke({
+							color: 'green',
+							width: 2
+						}),
+						fill: new ol.style.Fill({
+							color: [0, 0, 255, 0.6]
+						})
+					})
+				});
+
+				layers['FryslanWFS'] = {
+					name: '#Fryslan WFS extents',
+					layer: featureLayer
+				};
+
+				updateLayerList();
+
+
+			});
 
 		</script>
 	</body>
