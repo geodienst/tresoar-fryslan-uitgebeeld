@@ -55,15 +55,9 @@
 
 			//FIXME this is ugly 
 			//generate resolutions and matrixIds for luchtfoto
-			var matrixIds2 = [];
-			for (var i = 0;
-				i <= 13;
-				++i) {
-			 		if (i < 10) {
-			        	matrixIds2[i] = "0" + i;
-			 		} else {
-			 	    	 matrixIds2[i] = "" + i;
-					}
+			var matrixIds2 = new Array(resolutions.length);
+			for (var i = 0; i <= 13; ++i) {
+		 		matrixIds2[i] = (i < 10 ? "0" : "") + i;
 			}
 
 
@@ -136,7 +130,7 @@
 					})
 				}),		
 
-				//http://geoportaal.fryslan.nl/arcgis/services/ProvinciaalGeoRegister/PGR_features/GeoDataServer/WFSServer?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=PGR:CHK2_StinzenStates&SRSNAME=EPSG:28992
+				//http://geoportaal.fryslan.nl/arcgis/services/ProvinciaalGeoRegister/PGR_features/GeoDataServer/WFSServer?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAME=PGR:CHK2_StinzenStates&SRSNAME=EPSG:28992
 			};
 
 			var map = new ol.Map({
@@ -202,13 +196,58 @@
 			});
 
 			var geolocation = new ol.Geolocation({
-  // take the projection to use from the map's view
-  projection: view.getProjection()
-});
-// listen to changes in position
-geolocation.on('change', function(evt) {
-  window.console.log(geolocation.getPosition());
-});
+				// take the projection to use from the map's view
+				projection: map.getView().getProjection()
+			});
+			
+			// listen to changes in position
+			geolocation.on('change', function(evt) {
+				window.console.log(geolocation.getPosition());
+			});
+
+			$.ajaxPrefilter(function(options) {
+				if (options.crossdomain) {
+					options.url = 'proxy.php?url=' + encodeURIComponent(options.url);
+					options.crossdomain = false;
+				}
+			});
+			
+			var vecSource = new ol.source.Vector({
+				loader: function(extent, resolution, projection) {
+					$.ajax('http://geoportaal.fryslan.nl/arcgis/services/ProvinciaalGeoRegister/PGR_features/GeoDataServer/WFSServer', {
+						type: 'GET',
+						crossdomain: true,
+						data: {
+							service: 'WFS',
+							version: '1.0.0',
+							request: 'GetFeature',
+							typename: 'PGR:CHK2_StinzenStates',
+							srsname: 'EPSG:28992',
+							bbox: extent.join(',')
+						}
+					}).done(function(data) {
+						let format = new ol.format.GML2();
+						vecSource.addFeatures(format.readFeatures(data));
+					});
+				},
+				strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({
+					maxZoom: 19
+				})),
+				projection: 'EPSG:28992'
+			});
+
+			var vecLayer = new ol.layer.Vector({
+				source: vecSource,
+				style: new ol.style.Style({
+					stroke: new ol.style.Stroke({
+						color: 'green',
+						width: 2
+					})
+				})
+			});
+
+			map.addLayer(vecLayer);
+
 		</script>
 	</body>
 </html>
