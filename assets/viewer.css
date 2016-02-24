@@ -8,22 +8,6 @@ html, body {
 	font: 14px/18px sans-serif;
 }
 
-#header {
-	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
-	height: 32px;
-	line-height: 32px;
-	padding: 0 5px;
-	z-index: 2;
-	background: rgba(255, 255, 255, 0.8);
-}
-
-#header h1 {
-	margin: 0;
-}
-
 #map {
 	position: fixed;
 	top: 0;
@@ -34,18 +18,34 @@ html, body {
 
 #layers {
 	position: absolute;
-	top: 32px;
+	top: 0;
 	min-height: 100%;
 	left: 0;
-	width: 200px;
-	padding: 0 5px;
+	width: 250px;
+	padding: 5px 0;
 	z-index: 1;
 	background: rgba(255,255,255,0.8);
+	border-right: 1px solid #ccc;
+}
+
+#layers input[type=search] {
+	margin: 0;
+	width: 100%;
+	font: 14px/24px sans-serif;
+	background: transparent;
+	border: none;
+	border-top: 1px solid #ccc;
+	border-bottom: 1px solid #ccc;
+}
+
+#layers input[type=search]:focus {
+	background: white;
+	outline: none;
 }
 
 #layers .layers {
 	list-style: none;
-	padding: 0;
+	padding: 0 5px;
 }
 
 #layers .layer label {
@@ -54,6 +54,6 @@ html, body {
 }
 
 #map .ol-zoom {
-	top: 42px;
-	left: 210px;
+	top: 10px;
+	left: 260px;
 }
