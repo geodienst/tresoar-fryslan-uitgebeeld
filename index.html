@@ -169,7 +169,7 @@
 				$('#active-layers')
 					.find('.layer')
 					.map(function() { return $(this).prop('data-layer-id'); })
-					.each(function(i) { console.log(this); layers[this].setZIndex(i); });
+					.each(function(i) { layers[this].setZIndex(i); });
 			}
 
 			// Render the list of layers (using Transparency.js templating)
@@ -285,7 +285,6 @@
 
 			$('#layers').on('click', '.layer .remove-layer-button', function(e) {
 				var layerId = $(this).closest('.layer').attr('data-layer-id');
-				console.log(layerId);
 				map.removeLayer(layers[layerId]);
 			});
 
