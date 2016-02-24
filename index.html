@@ -5,20 +5,40 @@
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 		<title>Tresoar viewer</title>
-		<link rel="stylesheet" href="assets/ol.css">
-		<link rel="stylesheet" href="assets/viewer.css">
-		<script src="assets/proj4.js" type="text/javascript"></script>
-		<script src="assets/ol-debug.js"></script>
-		<script src="assets/jquery-2.2.0.min.js"></script>
-		<script src="assets/transparency.min.js"></script>
-		<script src="assets/jquery-sortable.min.js"></script>
+		<link rel="stylesheet" href="assets/css/bootstrap.min.css">
+		<link rel="stylesheet" href="assets/css/ol.css">
+		<link rel="stylesheet" href="assets/css/viewer.css">
+		<script src="assets/js/proj4.js" type="text/javascript"></script>
+		<script src="assets/js/ol-debug.js"></script>
+		<script src="assets/js/jquery-2.2.0.min.js"></script>
+		<script src="assets/js/bootstrap.min.js"></script>
+		<script src="assets/js/transparency.min.js"></script>
+		<script src="assets/js/jquery-sortable.min.js"></script>
 	</head>
 	<body>
 		<div id="map" class="map"></div>
 
+		<div id="feature-popup" class="popover" role="tooltip">
+			<div class="arrow"></div>
+			<button type="button" class="close" aria-label="Close">
+			  <span aria-hidden="true">&times;</span>
+			</button>
+			<h3 class="popover-title"></h3>
+			<div class="popover-content">
+				<table>
+					<tbody class="feature-property-table">
+						<tr>
+							<th class="key"></th>
+							<td class="value"></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+
 		<div id="layers">
-			<ul id="active-layers" class="layers">
-				<li class="layer">
+			<ul id="active-layers" class="layers list-group">
+				<li class="layer list-group-item">
 					<button type="button" class="remove-layer-button">Verberg</button>
 					<span class="layer-name"></span>
 					<input type="range" name="opacity" min="0" max="100" value="100">
@@ -27,11 +47,11 @@
 
 			<input type="search" id="layer-filter" placeholder="Zoek lagen…">
 			
-			<ul id="available-layers" class="layers">
-				<li class="layer">
-					<button type="button" class="add-layer-button">Voeg toe</button>
+			<div id="available-layers" class="layers list-group">
+				<button type="button" class="layer add-layer-button list-group-item">
+					<span class="glyphicon glyphicon-plus-sign"></span>
 					<span class="layer-name"></span>
-				</li>
+				</button>
 			</ul>
 		</div>
 
@@ -152,7 +172,7 @@
 			var map = new ol.Map({
 				maxExtent: projectionExtent,
 				layers: [],
-				target: 'map',
+				target: $('#map').get(0),
 				maxResolution: 860.16,
 				numZoomLevels: 12,
 				units: 'm',
@@ -278,26 +298,22 @@
 
 			// Make stuff interactive
 
-			$('#layers').on('click', '.layer .add-layer-button', function(e) {
-				var layerId = $(this).closest('.layer').attr('data-layer-id');
+			$('#layers').on('click', '.add-layer-button', function(e) {
+				var layerId = $(this).attr('data-layer-id');
 				if (layerId && layers[layerId]) {
 					var layer = layers[layerId];
-
 					if (layer.get('bbox'))
 						featureOverlay.getSource().removeFeature(layer.get('bbox'));
-
 					map.addLayer(layer);
 				}
 			});
 
-			$('#layers').on('click', '.layer .remove-layer-button', function(e) {
-				var layerId = $(this).closest('.layer').attr('data-layer-id');
+			$('#layers').on('click', '.remove-layer-button', function(e) {
+				var layerId = $(this).attr('data-layer-id');
 				if (layerId && layers[layerId]) {
 					var layer = layers[layerId];
-
 					if (layer.get('bbox'))
 						featureOverlay.getSource().removeFeature(layer.get('bbox'));
-
 					map.removeLayer(layer);
 				}
 			});
@@ -330,6 +346,41 @@
 				$('#available-layers .layer').each(function() {
 					$(this).toggle(query == "" || $(this).find('.layer-name').text().toLowerCase().indexOf(query) !== -1);
 				});
+			});
+
+			// Feature popup
+			var popup = new ol.Overlay({
+				element: $('#feature-popup').detach().get(0),
+				positioning: 'bottom-center',
+				stopEvent: false
+			});
+
+			map.addOverlay(popup);
+
+			$(popup.getElement()).find('.close').on('click', function() {
+				$(popup.getElement()).hide();
+			});
+
+			map.on('click', function(evt) {
+				var feature = map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) { return feature; });
+				
+				if (feature) {
+					var geometry = feature.getGeometry();
+					var coord = geometry.getCoordinates();
+					popup.setPosition(evt.coordinate);
+					$(popup.getElement()).show().render({
+							'popover-title': feature.get('NAAM'),
+							'feature-property-table': $.map(feature.getProperties(), function(v, k) {
+								return { 'key': k, 'value': v };
+							})
+						});
+				}
+			});
+
+			map.on('pointermove', function(e) {
+				var pixel = map.getEventPixel(e.originalEvent);
+				var hit = map.hasFeatureAtPixel(pixel);
+				map.getTarget().style.cursor = hit ? 'pointer' : '';
 			});
 
 			var geolocation = new ol.Geolocation({

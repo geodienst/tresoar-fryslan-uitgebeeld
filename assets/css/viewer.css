@@ -11,7 +11,7 @@ html, body {
 #map {
 	position: fixed;
 	top: 0;
-	left: 0;
+	left: 250px;
 	bottom: 0;
 	right: 0;
 }
@@ -24,18 +24,18 @@ html, body {
 	width: 250px;
 	padding: 5px 0;
 	z-index: 1;
-	background: rgba(255,255,255,0.8);
+	background: white;
 	border-right: 1px solid #ccc;
 }
 
 #layers input[type=search] {
 	margin: 0;
 	width: 100%;
-	font: 14px/24px sans-serif;
 	background: transparent;
 	border: none;
 	border-top: 1px solid #ccc;
 	border-bottom: 1px solid #ccc;
+	padding: 10px;
 }
 
 #layers input[type=search]:focus {
@@ -43,19 +43,16 @@ html, body {
 	outline: none;
 }
 
-#layers .layers {
-	list-style: none;
-	padding: 0 5px;
+#layers > .list-group > .list-group-item {
+	border-left: none;
+	border-right: none;
+	border-radius: 0;
+	overflow: hidden;
+    white-space: nowrap;
 }
 
-#layers .layer label {
-	cursor: pointer;
-	display: block;
-}
-
-#map .ol-zoom {
-	top: 10px;
-	left: 260px;
+#layers > input[type=search] + .list-group > .list-group-item:first-child {
+	border-top: none;
 }
 
 body.dragging, body.dragging * {
