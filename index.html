@@ -11,6 +11,7 @@
 		<script src="assets/ol-debug.js"></script>
 		<script src="assets/jquery-2.2.0.min.js"></script>
 		<script src="assets/transparency.min.js"></script>
+		<script src="assets/jquery-sortable.min.js"></script>
 	</head>
 	<body>
 		<div id="map" class="map"></div>
@@ -18,10 +19,8 @@
 		<div id="layers">
 			<ul id="active-layers" class="layers">
 				<li class="layer">
-					<label>
-						<button type="button" class="remove-layer-button">Verberg</button>
-						<span class="layer-name"></span>
-					</label>
+					<button type="button" class="remove-layer-button">Verberg</button>
+					<span class="layer-name"></span>
 					<input type="range" name="opacity" min="0" max="100" value="100">
 				</li>
 			</ul>
@@ -30,10 +29,8 @@
 			
 			<ul id="available-layers" class="layers">
 				<li class="layer">
-					<label>
-						<button type="button" class="add-layer-button">Voeg toe</button>
-						<span class="layer-name"></span>
-					</label>
+					<button type="button" class="add-layer-button">Voeg toe</button>
+					<span class="layer-name"></span>
 				</li>
 			</ul>
 		</div>
@@ -168,6 +165,13 @@
 				})
 			});
 
+			function updateLayerZOrder() {
+				$('#active-layers')
+					.find('.layer')
+					.map(function() { return $(this).prop('data-layer-id'); })
+					.each(function(i) { console.log(this); layers[this].setZIndex(i); });
+			}
+
 			// Render the list of layers (using Transparency.js templating)
 			function updateLayerList() {
 				var activeLayerIds = map.getLayers().getArray().map(function(layer) {
@@ -214,7 +218,39 @@
 						}
 					}
 				);
+
+				updateLayerZOrder();
 			}
+
+			var adjustment;
+
+			$('#active-layers').sortable({
+				// set $item relative to cursor position
+				onDragStart: function ($item, container, _super) {
+					var offset = $item.offset(),
+						pointer = container.rootGroup.pointer;
+
+					adjustment = {
+						left: pointer.left - offset.left,
+						top: pointer.top - offset.top
+					};
+
+					_super($item, container);
+				},
+				onDrag: function ($item, position) {
+					$item.css({
+						left: position.left - adjustment.left,
+						top: position.top - adjustment.top
+					});
+				},
+				onDrop: function($item, container, _super) {
+					updateLayerZOrder();
+					_super($item, container);
+				},
+				serialize: function (parent, children, isContainer) {
+					return isContainer ? children.join() : parent.attr('data-layer-id');
+				},
+			});
 
 			// Update the layer list now
 			updateLayerList();
