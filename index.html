@@ -280,12 +280,26 @@
 
 			$('#layers').on('click', '.layer .add-layer-button', function(e) {
 				var layerId = $(this).closest('.layer').attr('data-layer-id');
-				map.addLayer(layers[layerId]);
+				if (layerId && layers[layerId]) {
+					var layer = layers[layerId];
+
+					if (layer.get('bbox'))
+						featureOverlay.getSource().removeFeature(layer.get('bbox'));
+
+					map.addLayer(layer);
+				}
 			});
 
 			$('#layers').on('click', '.layer .remove-layer-button', function(e) {
 				var layerId = $(this).closest('.layer').attr('data-layer-id');
-				map.removeLayer(layers[layerId]);
+				if (layerId && layers[layerId]) {
+					var layer = layers[layerId];
+
+					if (layer.get('bbox'))
+						featureOverlay.getSource().removeFeature(layer.get('bbox'));
+
+					map.removeLayer(layer);
+				}
 			});
 
 			$('#layers').on('change', '.layer input[name=opacity]', function(e) {
@@ -296,7 +310,7 @@
 			$('#layers').on('mouseover', '.layer', function(e) {
 				var layerId = $(this).attr('data-layer-id');
 				var layer = layers[layerId];
-				if (layer.get('bbox') !== undefined) {
+				if (layer.get('bbox')) {
 					featureOverlay.getSource().addFeature(layer.get('bbox'));
 				}
 			});
@@ -306,7 +320,7 @@
 			$('#layers').on('mouseout', '.layer', function(e) {
 				var layerId = $(this).attr('data-layer-id');
 				var layer = layers[layerId];
-				if (layer.get('bbox') !== undefined) {
+				if (layer.get('bbox') !== undefined && featureOverlay.getSource().getFeatures().indexOf(layer.get('bbox')) !== -1) {
 					featureOverlay.getSource().removeFeature(layer.get('bbox'));
 				}
 			});
