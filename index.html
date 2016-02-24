@@ -312,6 +312,13 @@
 				}
 			});
 
+			$('#layer-filter').on('search', function() {
+				var query = $(this).val().toLowerCase();
+				$('#available-layers .layer').each(function() {
+					$(this).toggle(query == "" || $(this).find('.layer-name').text().toLowerCase().indexOf(query) !== -1);
+				});
+			});
+
 			var geolocation = new ol.Geolocation({
 				// take the projection to use from the map's view
 				projection: map.getView().getProjection()
