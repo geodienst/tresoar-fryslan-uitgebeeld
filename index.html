@@ -18,7 +18,7 @@
 	<body>
 		<div id="map" class="map"></div>
 
-		<div id="feature-popup" class="popover" role="tooltip">
+		<div id="feature-popup" class="popover right" role="tooltip">
 			<div class="arrow"></div>
 			<button type="button" class="close" aria-label="Close">
 			  <span aria-hidden="true">&times;</span>
@@ -390,7 +390,7 @@
 			// Feature popup
 			var popup = new ol.Overlay({
 				element: $('#feature-popup').detach().get(0),
-				positioning: 'bottom-center',
+				positioning: 'center-left',
 				stopEvent: false
 			});
 
@@ -408,11 +408,14 @@
 					var coord = geometry.getCoordinates();
 					popup.setPosition(evt.coordinate);
 					$(popup.getElement()).show().render({
-							'popover-title': feature.get('NAAM'),
-							'feature-property-table': $.map(feature.getProperties(), function(v, k) {
+						'popover-title': feature.get('NAAM'),
+						'feature-property-table':
+							$.map(feature.getProperties(), function(v, k) {
 								return { 'key': k, 'value': v };
+							}).filter(function(pair) {
+								return !/^(OBJECTID$|GLOBALID$|SHAPE$|SHAPE_)/.test(pair.key);
 							})
-						});
+					});
 				}
 			});
 

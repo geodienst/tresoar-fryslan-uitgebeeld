@@ -55,6 +55,8 @@ html, body {
 	border-top: none;
 }
 
+/* Stuff for jQuery sortable */
+
 body.dragging, body.dragging * {
 	cursor: move !important;
 }
@@ -80,4 +82,14 @@ body.dragging, body.dragging * {
 	border: 5px solid transparent;
 	border-left-color: black;
 	border-right: none;
+}
+
+/* Feature popup */
+#feature-popup {
+	max-width: 400px;
+	position: relative;
+}
+
+#feature-popup .popover-title:empty {
+	display: none;
 }
