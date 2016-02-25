@@ -41,6 +41,7 @@
 				<li class="layer list-group-item">
 					<button type="button" class="remove-layer-button">Verberg</button>
 					<span class="layer-name"></span>
+					<span class="z-index"></span>
 					<input type="range" name="opacity" min="0" max="100" value="100">
 				</li>
 			</ul>
@@ -101,7 +102,7 @@
 			var layers = {
 				brt: new ol.layer.Tile({
 					id: 'brt',
-					name: 'BRT Achtergrondkaart',
+					name: 'Achtergrondkaart BRT',
 					extent: projectionExtent,
 					source: new ol.source.WMTS({
 						url: 'http://geodata.nationaalgeoregister.nl/tiles/service/wmts/brtachtergrondkaart',
@@ -123,7 +124,7 @@
 
 				lufo: new ol.layer.Tile({
 					id: 'lufo',
-					name: 'Luchtfoto\'s',
+					name: 'Achtergrondkaart Luchtfoto\'s',
 					extent: projectionExtent,
 					source: new ol.source.WMTS({
 						url: 'http://geodata1.nationaalgeoregister.nl/luchtfoto/wmts',
@@ -180,16 +181,18 @@
 				displayProjection: EPSG28992,
 				view: new ol.View({
 					projection: EPSG28992,
-					center: ol.extent.getCenter(projectionExtent),
+					center: ol.extent.getCenter(projectionExtent), // FIXME center on Fryslân!
+					maxZoom: 19,
+					minZoom: 8,
 					zoom: 9
 				})
 			});
 
 			function updateLayerZOrder() {
-				$('#active-layers')
-					.find('.layer')
+				var $layers = $('#active-layers').find('.layer');
+				$layers
 					.map(function() { return $(this).prop('data-layer-id'); })
-					.each(function(i) { layers[this].setZIndex(i); });
+					.each(function(i) { layers[this].setZIndex($layers.length - 1 - i); });
 			}
 
 			// Render the list of layers (using Transparency.js templating)
@@ -198,15 +201,20 @@
 					return layer.get('id'); });
 
 				$('#active-layers').render(
-					map.getLayers().getArray().map(function(layer) {
-						return {
-							layer: {
-								'id': layer.get('id'),
-								'layer-name': layer.get('name'),
-								'opacity': layer.getOpacity() * 100
-							}
-						};
-					}),
+					Array.prototype.slice.call(map.getLayers().getArray())
+						.map(function(layer) {
+							return {
+								layer: {
+									'id': layer.get('id'),
+									'z-index': layer.getZIndex(),
+									'layer-name': layer.get('name'),
+									'opacity': layer.getOpacity() * 100
+								}
+							};
+						})
+						.sort(function(a, b) {
+							return b['layer']['z-index'] - a['layer']['z-index'];
+						}),
 					{ // directives on how to render this stuff
 						'layer': {
 							'data-layer-id': function() {
@@ -215,6 +223,18 @@
 						}
 					}
 				);
+
+				// Layers are rendered with the top-most in the list as the top-most in the view
+				// (Transpacenry template rendering does not take order into account, probably
+				// because sortable() screws up some internal model of the siblings.)
+				$('#active-layers .layer')
+					.sort(function(a, b) {
+						return layers[$(b).attr('data-layer-id')].getZIndex()
+							 - layers[$(a).attr('data-layer-id')].getZIndex(); 
+					})
+					.detach()
+					.appendTo('#active-layers');
+						
 
 				$('#available-layers').render(
 					// render all layers that are not already on the map
@@ -229,6 +249,8 @@
 								'layer-name': layer.get('name')
 							}
 						};
+					}).sort(function(a, b) { // sort layers alphabetically
+						return a['layer']['layer-name'].localeCompare(b['layer']['layer-name']);
 					}),
 					{ // directives on how to render this stuff
 						'layer': {
@@ -238,13 +260,14 @@
 						}
 					}
 				);
-
-				updateLayerZOrder();
 			}
 
 			var adjustment;
 
+			// Using https://johnny.github.io/jquery-sortable/ to make the active layer list orderable
 			$('#active-layers').sortable({
+				group: 'layers',
+
 				// set $item relative to cursor position
 				onDragStart: function ($item, container, _super) {
 					var offset = $item.offset(),
@@ -270,6 +293,20 @@
 				serialize: function (parent, children, isContainer) {
 					return isContainer ? children.join() : parent.attr('data-layer-id');
 				},
+			});
+
+			// Also enable dragging layers from the available list to the enabled list
+			$('#available-layers').sortable({
+				group: 'layers',
+				drop: false,
+				nested: false,
+				handle: '.list-group-item',
+				containerSelector: '.list-group',
+				itemSelector: '.list-group-item',
+				onMouseDown: function ($item, _super, event) {
+					event.preventDefault()
+					return true;
+				}
 			});
 
 			// Update the layer list now
@@ -300,22 +337,24 @@
 
 			$('#layers').on('click', '.add-layer-button', function(e) {
 				var layerId = $(this).attr('data-layer-id');
-				if (layerId && layers[layerId]) {
-					var layer = layers[layerId];
-					if (layer.get('bbox'))
-						featureOverlay.getSource().removeFeature(layer.get('bbox'));
-					map.addLayer(layer);
-				}
+				var layer = layers[layerId];
+				// Remove the bounding box overlay if that is still shown
+				if (layer.get('bbox'))
+					featureOverlay.getSource().removeFeature(layer.get('bbox'));
+
+				// Move the layer to the top
+				layer.setZIndex(map.getLayers().getArray().length);
+				
+				// Add the layer to the map
+				map.addLayer(layer);
 			});
 
 			$('#layers').on('click', '.remove-layer-button', function(e) {
-				var layerId = $(this).attr('data-layer-id');
-				if (layerId && layers[layerId]) {
-					var layer = layers[layerId];
-					if (layer.get('bbox'))
-						featureOverlay.getSource().removeFeature(layer.get('bbox'));
-					map.removeLayer(layer);
-				}
+				var layerId = $(this).closest('.layer').attr('data-layer-id');
+				var layer = layers[layerId];
+				if (layer.get('bbox'))
+					featureOverlay.getSource().removeFeature(layer.get('bbox'));
+				map.removeLayer(layer);
 			});
 
 			$('#layers').on('change', '.layer input[name=opacity]', function(e) {
@@ -393,6 +432,9 @@
 				window.console.log(geolocation.getPosition());
 			});
 
+			// Start with a brt achtergrond kaart as layer
+			map.addLayer(layers.brt);
+
 			$.ajax('http://geoportaal.fryslan.nl/arcgis/services/ProvinciaalGeoRegister/PGR_features/GeoDataServer/WFSServer', {
 				type: 'GET',
 				crossdomain: true,
@@ -458,7 +500,9 @@
 					}).get();
 				}).get();
 
-				var featureLayer = new ol.layer.Vector({
+				// Add a debug map that contains all the extents of the just fetched WFS
+				layers['FryslanWFS'] = new ol.layer.Vector({
+					id: 'FryslanWFS',
 					name: '#Fryslan WFS extents',
 					source: new ol.source.Vector({
 						features: features,
@@ -481,11 +525,7 @@
 					})
 				});
 
-				layers['FryslanWFS'] = featureLayer;
-
 				updateLayerList();
-
-
 			});
 
 		</script>
