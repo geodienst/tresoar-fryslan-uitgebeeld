@@ -463,11 +463,16 @@
 							]], 'XY')
 						}) : null;
 
+						var extent = $bbox.length ? [
+							$bbox.attr('minx'), $bbox.attr('miny'),
+							$bbox.attr('maxx'), $bbox.attr('maxy')].map(parseFloat) : null;
+
 						// Ugly side-effect implementation
 						layers[$feature.find('Title').text()] = new ol.layer.Vector({
 							id: $feature.find('Title').text(),
 							name: $feature.find('Title').text(),
 							bbox: bbox,
+							extent: extent,
 							source: new ol.source.Vector({
 								loader: function(extent, resolution, projection) {
 									$.ajax('http://geoportaal.fryslan.nl/arcgis/services/ProvinciaalGeoRegister/PGR_features/GeoDataServer/WFSServer', {
@@ -563,10 +568,15 @@
 						return null;
 					}
 
+					var extent = [
+						$bbox.attr('minx'), $bbox.attr('miny'),
+						$bbox.attr('maxx'), $bbox.attr('maxy')].map(parseFloat);
+
 					// Ugly side-effect implementation
 					layers[$layer.find('name').text()] = new ol.layer.Tile({
 						id: $layer.find('name').text(),
 						name: $layer.find('title').text(),
+						extent: extent,
 						bbox: bbox,
 						thumbnail: TRESOAR_WMS_URL + '?' + jQuery.param({
 							service: 'wms',
