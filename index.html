@@ -61,7 +61,8 @@
 			// Helper for jQuery.ajax and co. to easily use proxy server to go around CSRP
 			$.ajaxPrefilter(function(options) {
 				if (options.crossdomain) {
-					options.url = 'http://mirror.ikhoefgeen.nl/tresoar-proxy.php?url=' + encodeURIComponent(options.url);
+					options.url = 'proxy.php?url=' + encodeURIComponent(options.url);
+					//options.url = 'http://mirror.ikhoefgeen.nl/tresoar-proxy.php?url=' + encodeURIComponent(options.url);
 					options.crossdomain = false;
 				}
 			});
@@ -514,6 +515,89 @@
 						projection: 'EPSG:28992',
 						attributions: [new ol.Attribution({
 							html: 'Feature bboxes'
+						})],
+					}),
+					style: new ol.style.Style({
+						stroke: new ol.style.Stroke({
+							color: 'green',
+							width: 2
+						}),
+						fill: new ol.style.Fill({
+							color: [0, 0, 255, 0.6]
+						})
+					})
+				});
+
+				updateLayerList();
+			});
+
+			$.ajax('http://localhost:8080/geoserver/ows', {
+				type: 'GET',
+				crossdomain: true,
+				data: {
+					service: 'wms',
+					version: '1.3.0',
+					request: 'GetCapabilities',
+					namespace: 'tresoar'
+				}
+			}).done(function(data) {
+				window.wmsdata = data;
+				var wmsLayers = $(data).find('Layer > Layer').map(function() {
+					var $layer = $(this),
+						$bbox = $layer.find('boundingbox[crs="EPSG:28992"]');
+
+					var bbox = $bbox.length ? new ol.Feature({
+						typename: $layer.find('title').text(),
+						geometry: new ol.geom.Polygon([[
+							[$bbox.attr('minx'), $bbox.attr('miny')].map(parseFloat),
+							[$bbox.attr('maxx'), $bbox.attr('miny')].map(parseFloat),
+							[$bbox.attr('maxx'), $bbox.attr('maxy')].map(parseFloat),
+							[$bbox.attr('minx'), $bbox.attr('maxy')].map(parseFloat)
+						]], 'XY')
+					}) : null;
+
+					if (!bbox) {
+						console.log("Skipping", $layer.find('name').text(), "because it doesn't have a bounding box with crs=EPSG:28992");
+						return null;
+					}
+
+					// Ugly side-effect implementation
+					layers[$layer.find('name').text()] = new ol.layer.Tile({
+						id: $layer.find('name').text(),
+						name: $layer.find('title').text(),
+						bbox: bbox,
+						source: new ol.source.TileWMS({
+							url: 'http://localhost:8080/geoserver/ows',
+							serverType: 'geoserver',
+							params: {
+								LAYERS: $layer.find('name').text(),
+								TILED: true	
+							},
+							projection: 'EPSG:28992'
+						}),
+						style: new ol.style.Style({
+							stroke: new ol.style.Stroke({
+								color: 'green',
+								width: 2
+							})
+						})
+					});
+
+					return bbox;
+				}).get();
+
+				// Add a debug map that contains all the extents of the just fetched WFS
+				layers['GeoServerWMS'] = new ol.layer.Vector({
+					id: 'GeoServerWMS',
+					name: '#Geoserver WMS',
+					source: new ol.source.Vector({
+						features: wmsLayers,
+						strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({
+							maxZoom: 19
+						})),
+						projection: 'EPSG:28992',
+						attributions: [new ol.Attribution({
+							html: 'Geoserver bboxes'
 						})],
 					}),
 					style: new ol.style.Style({

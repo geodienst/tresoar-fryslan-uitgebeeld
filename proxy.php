@@ -14,12 +14,15 @@ $url .= (strpos($url, '?') === false ? '?' : '&') . http_build_query($_GET);
 
 $cache_file = '/tmp/tresoarproxy/' . sha1($url);
 
-if (!file_exists($cache_file)) {
-	if (!is_dir(dirname($cache_file)))
-		mkdir(dirname($cache_file));
+$nocache = true;
+
+if (!file_exists($cache_file) || $nocache) {
+	if (!$nocache) 
+		if (!is_dir(dirname($cache_file)))
+			mkdir(dirname($cache_file));
 
 	$response = file_get_contents($url);
-	file_put_contents($cache_file, $response);
+	if (!$nocache) file_put_contents($cache_file, $response);
 	echo $response;
 } else {
 	$fh = fopen($cache_file, 'rb');
