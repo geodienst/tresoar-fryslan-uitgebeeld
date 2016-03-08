@@ -67,6 +67,16 @@ html, body {
 	display: none;
 }
 
+#layers .resize-handle {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	right: -5px;
+	width: 10px;
+	z-index: 10;
+	cursor: ew-resize;
+}
+
 /* Stuff for jQuery sortable */
 
 body.dragging, body.dragging * {
