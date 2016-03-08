@@ -262,6 +262,19 @@
 				);
 			}
 
+			// Update each layer with an indicator of whether it would be inside the current view
+			// of the map or not.
+			function updateRelevantLayersList() {
+				var visibleExtent = map.getView().calculateExtent(map.getSize());
+				$('#available-layers .layer').each(function() {
+					var layer = layers[$(this).attr('data-layer-id')];
+					if (layer.getExtent()) {
+						var inView = ol.extent.intersects(layer.getExtent(), visibleExtent);
+						$(this).css({backgroundColor: inView ? "green" : "red"});
+					}
+				});
+			}
+
 			var adjustment;
 
 			// Using https://johnny.github.io/jquery-sortable/ to make the active layer list orderable
@@ -425,15 +438,13 @@
 				map.getTarget().style.cursor = hit ? 'pointer' : '';
 			});
 
-			var geolocation = new ol.Geolocation({
-				// take the projection to use from the map's view
-				projection: map.getView().getProjection()
-			});
-			
-			// listen to changes in position
-			geolocation.on('change', function(evt) {
-				window.console.log(geolocation.getPosition());
-			});
+			map.getView().on('change:center', (function() {
+				var timeout;
+				return function() {
+					clearTimeout(timeout);
+					timeout = setTimeout(updateRelevantLayersList, 50);
+				};
+			})());
 
 			// Start with a brt achtergrond kaart as layer
 			map.addLayer(layers.brt);
@@ -548,7 +559,6 @@
 					namespace: 'tresoar'
 				}
 			}).done(function(data) {
-				window.wmsdata = data;
 				var wmsLayers = $(data).find('Layer > Layer').map(function() {
 					var $layer = $(this),
 						$bbox = $layer.find('boundingbox[crs="EPSG:28992"]');
