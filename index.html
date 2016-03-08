@@ -46,13 +46,21 @@
 			</ul>
 
 			<input type="search" id="layer-filter" placeholder="Zoek lagen…">
+
+			<div id="available-raster-layers" class="layers available-layers list-group">
+				<button type="button" class="layer add-layer-button list-group-item">
+					<img class="thumbnail" src="">
+					<span class="glyphicon glyphicon-plus-sign"></span>
+					<span class="layer-name"></span>
+				</button>
+			</div>
 			
-			<div id="available-layers" class="layers list-group">
+			<div id="available-feature-layers" class="layers available-layers list-group">
 				<button type="button" class="layer add-layer-button list-group-item">
 					<span class="glyphicon glyphicon-plus-sign"></span>
 					<span class="layer-name"></span>
 				</button>
-			</ul>
+			</div>
 		</div>
 
 		<script>
@@ -234,13 +242,49 @@
 					})
 					.detach()
 					.appendTo('#active-layers');
-						
 
-				$('#available-layers').render(
-					// render all layers that are not already on the map
+				$('#available-raster-layers').render(
 					$.map(layers, function(layer) {
 						// If the layer is already on the map, hide it in the available list
 						if (activeLayerIds.indexOf(layer.get('id')) >= 0)
+							return null;
+
+						// Only render layers that are feature layers
+						if (layer.constructor != ol.layer.Tile)
+							return null;
+
+						return {
+							layer: {
+								'id': layer.get('id'),
+								'layer-name': layer.get('name'),
+								'thumbnail': layer.get('thumbnail')
+							}
+						};
+					}).sort(function(a, b) { // sort layers alphabetically
+						return a['layer']['layer-name'].localeCompare(b['layer']['layer-name']);
+					}),
+					{ // directives on how to render this stuff
+						'layer': {
+							'data-layer-id': function() {
+								return this.layer.id;
+							}
+						},
+						'thumbnail': {
+							'src': function() {
+								return this.layer.thumbnail;
+							}
+						}
+					}
+				);
+				
+				$('#available-feature-layers').render(
+					$.map(layers, function(layer) {
+						// If the layer is already on the map, hide it in the available list
+						if (activeLayerIds.indexOf(layer.get('id')) >= 0)
+							return null;
+
+						// Only render layers that are feature layers
+						if (layer.constructor != ol.layer.Vector)
 							return null;
 
 						return {
@@ -266,11 +310,11 @@
 			// of the map or not.
 			function updateRelevantLayersList() {
 				var visibleExtent = map.getView().calculateExtent(map.getSize());
-				$('#available-layers .layer').each(function() {
+				$('#layers .available-layers .layer').each(function() {
 					var layer = layers[$(this).attr('data-layer-id')];
 					if (layer.getExtent()) {
 						var inView = ol.extent.intersects(layer.getExtent(), visibleExtent);
-						$(this).css({backgroundColor: inView ? "green" : "red"});
+						$(this).toggle(inView);
 					}
 				});
 			}
@@ -309,7 +353,7 @@
 			});
 
 			// Also enable dragging layers from the available list to the enabled list
-			$('#available-layers').sortable({
+			$('#available-feature-layers, #available-raster-layers').sortable({
 				group: 'layers',
 				drop: false,
 				nested: false,
@@ -478,6 +522,8 @@
 							$bbox.attr('minx'), $bbox.attr('miny'),
 							$bbox.attr('maxx'), $bbox.attr('maxy')].map(parseFloat) : null;
 
+						console.log($feature);
+
 						// Ugly side-effect implementation
 						layers[$feature.find('Title').text()] = new ol.layer.Vector({
 							id: $feature.find('Title').text(),
@@ -593,6 +639,7 @@
 							version: '1.3.0',
 							request: 'getMap',
 							format: 'image/png',
+							transparent: true,
 							styles: '',
 							layers: $layer.find('name').text(),
 							srs: 'EPSG:28992',

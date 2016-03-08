@@ -55,6 +55,18 @@ html, body {
 	border-top: none;
 }
 
+#layers .layer .thumbnail {
+	width: 100%;
+	display: block;
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+#layers .layer .thumbnail[src=""] {
+	display: none;
+}
+
 /* Stuff for jQuery sortable */
 
 body.dragging, body.dragging * {
