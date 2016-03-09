@@ -112,6 +112,18 @@ body.dragging, body.dragging * {
 	position: relative;
 }
 
+#feature-popup button.close {
+	margin-right: 5px;
+}
+
 #feature-popup .popover-title:empty {
 	display: none;
+}
+
+#feature-popup td {
+    word-break: break-word;
+}
+
+#feature-selection-menu {
+	position: static;
 }
