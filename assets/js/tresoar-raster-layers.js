@@ -34,7 +34,7 @@ $.ajax(TRESOAR_WMS_URL, {
 			$bbox.attr('maxx'), $bbox.attr('maxy')].map(parseFloat);
 
 		// Ugly side-effect implementation
-		layers[$layer.find('name').text()] = new ol.layer.Tile({
+		window.layers[$layer.find('name').text()] = new ol.layer.Tile({
 			id: $layer.find('name').text(),
 			name: $layer.find('title').text(),
 			extent: extent,
@@ -73,7 +73,7 @@ $.ajax(TRESOAR_WMS_URL, {
 	}).get();
 
 	// Add a debug map that contains all the extents of the just fetched WFS
-	layers['GeoServerWMS'] = new ol.layer.Vector({
+	window.layers['GeoServerWMS'] = new ol.layer.Vector({
 		id: 'GeoServerWMS',
 		name: '#Geoserver WMS',
 		source: new ol.source.Vector({

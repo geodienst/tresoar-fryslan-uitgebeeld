@@ -28,7 +28,7 @@ $.ajax('http://geoportaal.fryslan.nl/arcgis/services/ProvinciaalGeoRegister/PGR_
 				$bbox.attr('maxx'), $bbox.attr('maxy')].map(parseFloat) : null;
 
 			// Ugly side-effect implementation
-			layers[$feature.find('Title').text()] = new ol.layer.Vector({
+			window.layers[$feature.find('Title').text()] = new ol.layer.Vector({
 				id: $feature.find('Title').text(),
 				name: $feature.find('Title').text(),
 				bbox: bbox,
@@ -69,7 +69,7 @@ $.ajax('http://geoportaal.fryslan.nl/arcgis/services/ProvinciaalGeoRegister/PGR_
 	}).get();
 
 	// Add a debug map that contains all the extents of the just fetched WFS
-	layers['FryslanWFS'] = new ol.layer.Vector({
+	window.layers['FryslanWFS'] = new ol.layer.Vector({
 		id: 'FryslanWFS',
 		name: '#Fryslan WFS extents',
 		source: new ol.source.Vector({

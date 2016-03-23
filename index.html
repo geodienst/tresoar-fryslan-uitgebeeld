@@ -113,7 +113,7 @@
 			
 			// Could we then also access the extents of each layer? Then we can filter the list by
 			// intersecting those with the current view extents.
-			var layers = {
+			window.layers = {
 				brt: new ol.layer.Tile({
 					id: 'brt',
 					name: 'Achtergrondkaart BRT',
@@ -376,7 +376,7 @@
 				updateWhileInteracting: true
 			});
 
-			// Make stuff interactive
+			// Make layer interactive
 
 			$('#layers').on('click', '.add-layer-button', function(e) {
 				var layerId = $(this).attr('data-layer-id');
@@ -577,6 +577,7 @@
 			})());
 
 			// Map extents for discoverability
+			/*
 			var extendsOverlay = new ol.layer.Vector({
 				map: map,
 				source: new ol.source.Vector({
@@ -607,6 +608,7 @@
 					})
 				})
 			});
+			*/
 
 			// Start with a brt achtergrond kaart as layer
 			map.addLayer(layers.brt);
