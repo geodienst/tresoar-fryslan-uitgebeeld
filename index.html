@@ -273,7 +273,7 @@
 							return null;
 
 						// Only show layers that are inside the view
-						var visibility = -1;
+						var visibility = -1, coverage = -1;
 
 						if (layer.getExtent()) {
 							var visibleMapExtent = ol.extent.getIntersection(layer.getExtent(), visibleExtent);
@@ -282,6 +282,7 @@
 								return null;
 							
 							visibility = getSurface(visibleMapExtent) / getSurface(layer.getExtent());
+							coverage = getSurface(visibleMapExtent) / getSurface(visibleExtent);
 						}
 						
 						return {
@@ -289,11 +290,12 @@
 								'id': layer.get('id'),
 								'layer-name': layer.get('name'),
 								'thumbnail': layer.get('thumbnail'),
-								'visibility': visibility
+								'visibility': visibility,
+								'coverage': coverage
 							}
 						};
 					}).sort(function(a, b) { // sort layers in size (smaller on top)
-						return b.layer.visibility - a.layer.visibility;
+						return (b.layer.visibility * b.layer.coverage) - (a.layer.visibility * a.layer.coverage);
 					}),
 					{ // directives on how to render this stuff
 						'layer': {
