@@ -140,6 +140,28 @@
 					})
 				}),
 
+				opentopo: new ol.layer.Tile({
+					id: 'opentopo',
+					name: 'Achtergrondkaart OpenTopo',
+					extent: projectionExtent,
+					source: new ol.source.TileArcGISRest({
+						url: 'https://services.arcgisonline.nl/arcgis/rest/services/Basiskaarten/Open_Topo/MapServer',
+						layer: 'Basiskaarten_Open_Topo',
+						matrixSet: 'EPSG:28992',
+						format: 'image/png',
+						attributions: [new ol.Attribution({
+						html: 'Kaartbeeld: © <a href="http://www.imergis.nl/">Jan-Willem van Aalst</a> ' +
+							  'Webservice: <a href="http://esri.nl/">Esri Nederland</a>'
+						})],
+						projection: projection,
+						tileGrid: new ol.tilegrid.WMTS({
+							origin: ol.extent.getTopLeft(projectionExtent),
+							resolutions: resolutions,
+							matrixIds: matrixIds
+						})
+					})
+				}),
+
 				lufo: new ol.layer.Tile({
 					id: 'lufo',
 					name: 'Achtergrondkaart Luchtfoto\'s',
@@ -250,8 +272,10 @@
 								'thumbnail': layer.get('thumbnail')
 							}
 						};
-					}).sort(function(a, b) { // sort layers alphabetically
-						return a['layer']['layer-name'].localeCompare(b['layer']['layer-name']);
+					}).sort(function(a, b) { // sort layers in size (smaller on top)
+						var sizeA = ol.extent.getSize(layers[a['layer']['id']].getExtent());
+						var sizeB = ol.extent.getSize(layers[b['layer']['id']].getExtent());
+						return sizeA * sizeA > sizeB * sizeB;
 					}),
 					{ // directives on how to render this stuff
 						'layer': {
@@ -614,8 +638,8 @@
 			});
 			*/
 
-			// Start with a brt achtergrond kaart as layer
-			map.addLayer(layers.brt);
+			// Start with an Open Topo achtergrond kaart as layer
+			map.addLayer(layers.opentopo);
 
 			var pos = null;
 			var width = 0;
