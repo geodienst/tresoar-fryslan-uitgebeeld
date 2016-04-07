@@ -255,32 +255,53 @@
 					.detach()
 					.appendTo('#active-layers');
 
+				var visibleExtent = map.getView().calculateExtent(map.getSize());
+
+				function getSurface(extent) {
+					var size = ol.extent.getSize(extent);
+					return size[0] * size[1];
+				}
+				
 				$('#available-raster-layers').render(
 					$.map(layers, function(layer) {
 						// If the layer is already on the map, hide it in the available list
 						if (activeLayerIds.indexOf(layer.get('id')) >= 0)
 							return null;
 
-						// Only render layers that are feature layers
+						// Only show layers that are raster layers
 						if (layer.constructor != ol.layer.Tile)
 							return null;
 
+						// Only show layers that are inside the view
+						var visibility = -1;
+
+						if (layer.getExtent()) {
+							var visibleMapExtent = ol.extent.getIntersection(layer.getExtent(), visibleExtent);
+
+							if (ol.extent.isEmpty(visibleMapExtent))
+								return null;
+							
+							visibility = getSurface(visibleMapExtent) / getSurface(layer.getExtent());
+						}
+						
 						return {
 							layer: {
 								'id': layer.get('id'),
 								'layer-name': layer.get('name'),
-								'thumbnail': layer.get('thumbnail')
+								'thumbnail': layer.get('thumbnail'),
+								'visibility': visibility
 							}
 						};
 					}).sort(function(a, b) { // sort layers in size (smaller on top)
-						var sizeA = ol.extent.getSize(layers[a['layer']['id']].getExtent());
-						var sizeB = ol.extent.getSize(layers[b['layer']['id']].getExtent());
-						return sizeA * sizeA > sizeB * sizeB;
+						return b.layer.visibility - a.layer.visibility;
 					}),
 					{ // directives on how to render this stuff
 						'layer': {
 							'data-layer-id': function() {
 								return this.layer.id;
+							},
+							'title': function() {
+								return 'Visibility: ' + this.layer.visibility;
 							}
 						},
 						'thumbnail': {
@@ -318,19 +339,6 @@
 						}
 					}
 				);
-			}
-
-			// Update each layer with an indicator of whether it would be inside the current view
-			// of the map or not.
-			function updateRelevantLayersList() {
-				var visibleExtent = map.getView().calculateExtent(map.getSize());
-				$('#layers .available-layers .layer').each(function() {
-					var layer = layers[$(this).attr('data-layer-id')];
-					if (layer.getExtent()) {
-						var inView = ol.extent.intersects(layer.getExtent(), visibleExtent);
-						$(this).toggle(inView);
-					}
-				});
 			}
 
 			var adjustment;
@@ -600,7 +608,7 @@
 				var timeout;
 				return function() {
 					clearTimeout(timeout);
-					timeout = setTimeout(updateRelevantLayersList, 50);
+					timeout = setTimeout(updateLayerList, 50);
 				};
 			})());
 
