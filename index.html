@@ -14,6 +14,7 @@
 		<script src="assets/js/bootstrap.min.js"></script>
 		<script src="assets/js/transparency.min.js"></script>
 		<script src="assets/js/jquery-sortable.min.js"></script>
+		<script src="assets/js/string_score.js"></script>
 	</head>
 	<body>
 		<div id="map" class="map"></div>
@@ -257,6 +258,8 @@
 
 				var visibleExtent = map.getView().calculateExtent(map.getSize());
 
+				var query = $('#layer-filter').val().toLowerCase();
+
 				function getSurface(extent) {
 					var size = ol.extent.getSize(extent);
 					return size[0] * size[1];
@@ -272,17 +275,20 @@
 						if (layer.constructor != ol.layer.Tile)
 							return null;
 
-						// Only show layers that are inside the view
-						var visibility = -1, coverage = -1;
+						var score = 0;
 
-						if (layer.getExtent()) {
+						if (query != '') {
+							score = layer.get('name').score(query);
+						} else if (layer.getExtent()) {
 							var visibleMapExtent = ol.extent.getIntersection(layer.getExtent(), visibleExtent);
 
+							// Only show layers that are inside the view
 							if (ol.extent.isEmpty(visibleMapExtent))
 								return null;
 							
-							visibility = getSurface(visibleMapExtent) / getSurface(layer.getExtent());
-							coverage = getSurface(visibleMapExtent) / getSurface(visibleExtent);
+							var visibility = getSurface(visibleMapExtent) / getSurface(layer.getExtent());
+							var coverage = getSurface(visibleMapExtent) / getSurface(visibleExtent);
+							score = visibility * coverage;
 						}
 						
 						return {
@@ -290,12 +296,11 @@
 								'id': layer.get('id'),
 								'layer-name': layer.get('name'),
 								'thumbnail': layer.get('thumbnail'),
-								'visibility': visibility,
-								'coverage': coverage
+								'score': score
 							}
 						};
 					}).sort(function(a, b) { // sort layers in size (smaller on top)
-						return (b.layer.visibility * b.layer.coverage) - (a.layer.visibility * a.layer.coverage);
+						return b.layer.score - a.layer.score;
 					}),
 					{ // directives on how to render this stuff
 						'layer': {
@@ -303,7 +308,7 @@
 								return this.layer.id;
 							},
 							'title': function() {
-								return 'Visibility: ' + this.layer.visibility;
+								return 'Score: ' + this.layer.score;
 							}
 						},
 						'thumbnail': {
@@ -461,12 +466,7 @@
 				}
 			});
 
-			$('#layer-filter').on('search', function() {
-				var query = $(this).val().toLowerCase();
-				$('#available-layers .layer').each(function() {
-					$(this).toggle(query == "" || $(this).find('.layer-name').text().toLowerCase().indexOf(query) !== -1);
-				});
-			});
+			$('#layer-filter').on('search', updateLayerList);
 
 			// Feature popup
 			var popup = new ol.Overlay({
