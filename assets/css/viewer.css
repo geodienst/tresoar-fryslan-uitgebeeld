@@ -6,6 +6,7 @@ html, body {
 	height: 100%;
 	margin: 0;
 	font: 14px/18px sans-serif;
+	overflow: hidden;
 }
 
 #map {
@@ -20,13 +21,29 @@ html, body {
 #layers {
 	position: absolute;
 	top: 0;
-	min-height: 100%;
+	bottom: 0;
 	left: 0;
+	height: 100%;
+	overflow: hidden;
 	width: 250px;
-	padding: 5px 0;
 	z-index: 1;
 	background: white;
 	border-right: 1px solid #ccc;
+	font-size: 12px;
+}
+
+#layers .layer-list {
+	overflow: hidden;
+	overflow-y: auto;
+	height: 100%;
+}
+
+#layers h4 {
+    font-size: 1em;
+    padding: 0 15px;
+    line-height: 2em;
+    background: #eee;
+    margin: 0;
 }
 
 #layers input[type=search] {
@@ -44,7 +61,11 @@ html, body {
 	outline: none;
 }
 
-#layers > .list-group > .list-group-item {
+#layers .list-group {
+    margin-bottom: 0;
+}
+
+#layers .list-group > .list-group-item {
 	border-left: none;
 	border-right: none;
 	border-radius: 0;
@@ -52,7 +73,7 @@ html, body {
     white-space: nowrap;
 }
 
-#layers > input[type=search] + .list-group > .list-group-item:first-child {
+#layers input[type=search] + .list-group > .list-group-item:first-child {
 	border-top: none;
 }
 
@@ -66,6 +87,13 @@ html, body {
 
 #layers .layer .thumbnail[src=""] {
 	display: none;
+}
+
+#layers .layer .layer-name {
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 #layers .resize-handle {
