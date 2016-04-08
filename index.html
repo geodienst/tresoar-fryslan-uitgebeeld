@@ -44,20 +44,25 @@
 		<div id="layers">
 			<div class="resize-handle"></div>
 
+			<h4>Zichtbare kaarten</h4>
+
 			<ul id="active-layers" class="layers list-group">
 				<li class="layer list-group-item">
-					<button type="button" class="remove-layer-button">Verberg</button>
+					<button type="button" class="remove-layer-button" data-toggle="tooltip" data-placement="right" data-tooltip="Verplaats terug naar 'beschikbare kaarten'">
+						<span class="glyphicon glyphicon-minus-sign"></span>
+					</button>
 					<span class="layer-name"></span>
 					<input type="range" name="opacity" min="0" max="100" value="100">
 				</li>
 			</ul>
 
+			<h4>Beschikbare kaarten</h4>
+
 			<input type="search" id="layer-filter" placeholder="Zoek lagen…">
 
 			<div id="available-raster-layers" class="layers available-layers list-group">
-				<button type="button" class="layer add-layer-button list-group-item">
+				<button type="button" class="layer add-layer-button list-group-item" data-toggle="tooltip" data-placement="right">
 					<img class="thumbnail" src="">
-					<span class="glyphicon glyphicon-plus-sign"></span>
 					<span class="layer-name"></span>
 				</button>
 			</div>
@@ -240,6 +245,11 @@
 						'layer': {
 							'data-layer-id': function() {
 								return this.layer.id;
+							},
+						},
+						'remove-layer-button': {
+							'data-tooltip': function() {
+								return 'Verplaats ' + this.layer['layer-name'] + ' terug naar \'Beschikbare kaarten\'';
 							}
 						}
 					}
@@ -286,9 +296,13 @@
 							if (ol.extent.isEmpty(visibleMapExtent))
 								return null;
 							
+							// Visibility: How much of the map would be visible in the current view
 							var visibility = getSurface(visibleMapExtent) / getSurface(layer.getExtent());
+
+							// Coverage: How much of the current view would be filled in by the map
 							var coverage = getSurface(visibleMapExtent) / getSurface(visibleExtent);
-							score = visibility * coverage;
+							
+							score = 2 * visibility + coverage;
 						}
 						
 						return {
@@ -307,8 +321,9 @@
 							'data-layer-id': function() {
 								return this.layer.id;
 							},
-							'title': function() {
-								return 'Score: ' + this.layer.score;
+							'data-tooltip': function() {
+								return 'Verplaats ' + this.layer['layer-name'] + ' naar \'zichtbare kaarten\''
+									+ '(Score: ' + this.layer.score.toFixed(3) + ')';
 							}
 						},
 						'thumbnail': {
@@ -347,6 +362,15 @@
 					}
 				);
 			}
+
+			// Enable Bootstrap tooltips in the dynamic #layers list
+			$('#layers').tooltip({
+				container: 'body',
+				selector: '[data-toggle="tooltip"]',
+				title: function() {
+					return $(this).attr('data-tooltip') || $(this).attr('title');
+				}
+			});
 
 			var adjustment;
 

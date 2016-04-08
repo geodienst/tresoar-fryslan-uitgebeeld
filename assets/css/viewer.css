@@ -14,6 +14,7 @@ html, body {
 	left: 250px;
 	bottom: 0;
 	right: 0;
+	background: #C1DEE5; /* Same color as OpenTopo */
 }
 
 #layers {
@@ -75,6 +76,33 @@ html, body {
 	width: 10px;
 	z-index: 10;
 	cursor: ew-resize;
+}
+
+#active-layers .layer {
+	position: relative;
+	padding-right: 20px;
+	transition: padding-right 200ms;
+}
+
+#active-layers .layer .remove-layer-button {
+	position: absolute;
+	right: -32px;
+	top: 0;
+	bottom: 0;
+	width: 32px;
+	border: none;
+	background: rgba(0,60,136,.7);
+	margin: 0;
+	padding: 0;
+	transition: right 200ms;
+}
+
+#active-layers .layer:hover {
+	padding-right: 48px;
+}
+
+#active-layers .layer:hover .remove-layer-button {
+	right: 0;
 }
 
 /* Stuff for jQuery sortable */
