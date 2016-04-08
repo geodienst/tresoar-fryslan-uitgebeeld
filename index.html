@@ -292,7 +292,11 @@
 						var score = 0;
 
 						if (query != '') {
-							score = layer.get('name').score(query);
+							score = layer.get('name').score(query, 0.3);
+
+							// If the score is pretty low, don't even show it at all
+							if (score < 0.1)
+								return null;
 						} else if (layer.getExtent()) {
 							var visibleMapExtent = ol.extent.getIntersection(layer.getExtent(), visibleExtent);
 
@@ -638,7 +642,7 @@
 				var timeout;
 				return function() {
 					clearTimeout(timeout);
-					timeout = setTimeout(updateLayerList, 50);
+					timeout = setTimeout(updateLayerList, 500);
 				};
 			})());
 
