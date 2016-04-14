@@ -24,7 +24,7 @@
 		<div id="feature-popup" class="popover right" role="tooltip">
 			<div class="arrow"></div>
 			<button type="button" class="close" aria-label="Close">
-			  <span aria-hidden="true">&times;</span>
+				<span aria-hidden="true">&times;</span>
 			</button>
 			<h3 class="popover-title"></h3>
 			<div class="popover-content">
@@ -80,11 +80,21 @@
 					</div>
 				</div>
 
-				<div id="available-raster-layers" class="layers available-layers list-group">
-					<button type="button" class="layer add-layer-button list-group-item" data-toggle="tooltip" data-placement="right">
-						<img class="thumbnail" src="">
-						<span class="layer-name"></span>
-					</button>
+				<div id="available-raster-layers" class="layers available-layers">
+					<div class="layer-group">
+						<h4 class="layer-group-header">
+							<span class="layer-group-name">Group name</span>
+							<button class="group-toggle">
+								<span class="glyphicon glyphicon-minus"></span>
+							</button>
+						</h4>
+						<div class="layers list-group">
+							<button type="button" class="layer add-layer-button list-group-item" data-toggle="tooltip" data-placement="right">
+								<img class="thumbnail" src="">
+								<span class="name"></span>
+							</button>
+						</div>
+					</div>
 				</div>
 
 				<h4>Beschikbare overlays</h4>
@@ -136,9 +146,21 @@
 			//FIXME this is ugly 
 			//generate resolutions and matrixIds for luchtfoto
 			var matrixIds2 = new Array(resolutions.length);
-			for (var i = 0; i <= 13; ++i) {
+			for (var i = 0; i < resolutions.length; ++i) {
 				matrixIds2[i] = (i < 10 ? "0" : "") + i;
 			}
+
+			window.groups = [];
+
+			$.getJSON('metadata/groups.json', function(data) {
+				window.groups = data.groups.map(function(group) {
+					return {
+						name: group.name,
+						pattern: new RegExp(group.pattern)
+					};
+				});
+				scheduleUpdateLayerList();
+			});
 
 
 			// FIXME it would be more awesome if we could retrieve this list (excl the base layers)
@@ -302,65 +324,108 @@
 					var size = ol.extent.getSize(extent);
 					return size[0] * size[1];
 				}
-				
-				$('#available-raster-layers').render(
-					$.map(layers, function(layer) {
-						// If the layer is already on the map, hide it in the available list
-						if (activeLayerIds.indexOf(layer.get('id')) >= 0)
+
+				// Turn the list of layers into a selection of info about the raster layers, to be rendered in the list.
+				var rasterLayers = $.map(layers, function(layer) {
+					// If the layer is already on the map, hide it in the available list
+					if (activeLayerIds.indexOf(layer.get('id')) >= 0)
+						return null;
+
+					// Only show layers that are raster layers
+					if (layer.constructor != ol.layer.Tile)
+						return null;
+
+					var score = 0;
+
+					if (query != '') {
+						score = layer.get('name').score(query, 0.3);
+
+						// If the score is pretty low, don't even show it at all
+						if (score < 0.1)
 							return null;
+					} else if (layer.getExtent()) {
+						var visibleMapExtent = ol.extent.getIntersection(layer.getExtent(), visibleExtent);
 
-						// Only show layers that are raster layers
-						if (layer.constructor != ol.layer.Tile)
+						// Only show layers that are inside the view
+						if (ol.extent.isEmpty(visibleMapExtent))
 							return null;
-
-						var score = 0;
-
-						if (query != '') {
-							score = layer.get('name').score(query, 0.3);
-
-							// If the score is pretty low, don't even show it at all
-							if (score < 0.1)
-								return null;
-						} else if (layer.getExtent()) {
-							var visibleMapExtent = ol.extent.getIntersection(layer.getExtent(), visibleExtent);
-
-							// Only show layers that are inside the view
-							if (ol.extent.isEmpty(visibleMapExtent))
-								return null;
-							
-							// Visibility: How much of the map would be visible in the current view
-							var visibility = getSurface(visibleMapExtent) / getSurface(layer.getExtent());
-
-							// Coverage: How much of the current view would be filled in by the map
-							var coverage = getSurface(visibleMapExtent) / getSurface(visibleExtent);
-							
-							score = 2 * visibility + coverage;
-						}
 						
-						return {
-							layer: {
-								'id': layer.get('id'),
-								'layer-name': layer.get('name'),
-								'thumbnail': layer.get('thumbnail'),
-								'score': score
-							}
+						// Visibility: How much of the map would be visible in the current view
+						var visibility = getSurface(visibleMapExtent) / getSurface(layer.getExtent());
+
+						// Coverage: How much of the current view would be filled in by the map
+						var coverage = getSurface(visibleMapExtent) / getSurface(visibleExtent);
+						
+						score = 2 * visibility + coverage;
+					}
+					
+					return {
+						layer: {
+							'id': layer.get('id'),
+							'name': layer.get('name'),
+							'thumbnail': layer.get('thumbnail'),
+							'score': score
+						}
+					};
+				});
+
+				// sort layers in size (smaller on top)
+				rasterLayers = rasterLayers.sort(function(a, b) {
+					return b.layer.score - a.layer.score;
+				});
+
+				// group layers by group as defined by window.groups (or groups.json indirectly)
+				rasterLayers = rasterLayers.reduce(function(prev, current) {
+					// Find the right group
+					var group = groups.find(function(group) {
+						return group.pattern.test(current.layer.id);
+					});
+
+					// No group? Skip map completely right now
+					if (!group)
+						return prev;
+
+					// Otherwise add map to the combined groups element
+					if (!(group.name in prev))
+						prev[group.name] = {
+							'layer-group-name': group.name,
+							'layers': [current]
 						};
-					}).sort(function(a, b) { // sort layers in size (smaller on top)
-						return b.layer.score - a.layer.score;
-					}),
+					else
+						prev[group.name]['layers'].push(current);
+
+					return prev;
+				}, {});
+
+				// turn the object (map-like structure) back to an array of values (groups)
+				rasterLayers = $.map(rasterLayers, function(layer) {
+					return layer;
+				});
+
+				$('#available-raster-layers').render(rasterLayers,
 					{ // directives on how to render this stuff
-						'layer': {
-							'data-layer-id': function() {
-								return this.layer.id;
+						'layer-group': {
+							'data-group-id': function() {
+								return this['layer-group-name'];
 							},
-							'data-tooltip': function() {
-								return 'Verplaats ' + this.layer.id + ' naar \'zichtbare kaarten\''
-									+ '(Score: ' + this.layer.score.toFixed(3) + ')';
+							'data-collapsed': function() {
+								return groupCollapsed[this['layer-group-name']] ? 'collapsed' : '';
 							}
 						},
-						'thumbnail': {
-							'src': function() {
-								return this.layer.thumbnail;
+						'layers': {
+							'layer': {
+								'data-layer-id': function() {
+									return this.layer.id;
+								},
+								'data-tooltip': function() {
+									return 'Verplaats ' + this.layer.id + ' naar \'zichtbare kaarten\''
+										+ '(Score: ' + this.layer.score.toFixed(3) + ')';
+								},
+								'thumbnail': {
+									'src': function() {
+										return this.thumbnail;
+									}
+								}
 							}
 						}
 					}
@@ -376,14 +441,28 @@
 						if (layer.constructor != ol.layer.Vector)
 							return null;
 
+						var score = 0;
+
+						if (query != '') {
+							score = layer.get('name').score(query, 0.3)
+
+							// Hide non-matches completely
+							if (score < 0.1)
+								return null;
+						}
+
 						return {
 							layer: {
 								'id': layer.get('id'),
+								'score': score,
 								'layer-name': layer.get('name')
 							}
 						};
-					}).sort(function(a, b) { // sort layers alphabetically
-						return a['layer']['layer-name'].localeCompare(b['layer']['layer-name']);
+					}).sort(function(a, b) { // sort layers by score, and then alphabetically
+						if (a.layer.score != b.layer.score)
+							return b.layer.score - a.layer.score;
+						else
+							return a.layer['layer-name'].localeCompare(b.layer['layer-name']);
 					}),
 					{ // directives on how to render this stuff
 						'layer': {
@@ -543,6 +622,18 @@
 				if (layer.get('bbox') !== undefined && featureOverlay.getSource().getFeatures().indexOf(layer.get('bbox')) !== -1) {
 					featureOverlay.getSource().removeFeature(layer.get('bbox'));
 				}
+			});
+
+			var groupCollapsed = {};
+
+			// Layer group collapsing
+			$('#layers').on('click', '.group-toggle', function(e) {
+				var groupEl = $(this).closest('[data-group-id]');
+				var groupId = groupEl.attr('data-group-id');
+				var visible = !groupCollapsed[groupId];
+
+				groupEl.attr('data-collapsed', visible ? 'collapsed' : '');
+				groupCollapsed[groupId] = visible;
 			});
 
 			// Layer searching

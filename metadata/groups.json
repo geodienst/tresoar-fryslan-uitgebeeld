@@ -1,0 +1,20 @@
+{
+	"groups": [
+		{
+			"name": "Atlas 1718",
+			"pattern": "^tresoar:NL_0400410000_3227_G_kluis.+?"
+		},
+		{
+			"name": "Atlas 1698",
+			"pattern": "^tresoar:NL_0400410000_K_186.+?"
+		},
+		{
+			"name": "Atlas 1664",
+			"pattern": "^tresoar:NL_0400410000_3187a_G_fol_.+?"
+		},
+		{
+			"name": "Overig",
+			"pattern": ".+?"
+		}
+	]
+}

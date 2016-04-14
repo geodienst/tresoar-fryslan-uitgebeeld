@@ -51,6 +51,24 @@ html, body {
     line-height: 2em;
     background: #eee;
     margin: 0;
+    border-bottom: 1px solid #ccc;
+}
+
+#layers .layer-group[data-collapsed=collapsed] .layers {
+    display: none;
+}
+
+#layers h4 .group-toggle {
+	display: inline-block;
+    background: none;
+    border: none;
+    float: right;
+    margin: 0;
+    padding: 0;
+}
+
+#layers .layer-group[data-collapsed=collapsed] h4 .group-toggle .glyphicon::before {
+	content: "\002b";
 }
 
 #layers .layer-filter {
@@ -90,7 +108,8 @@ html, body {
     white-space: nowrap;
 }
 
-#layers .layer-filter + .list-group > .list-group-item:first-child {
+#layers .layer-filter + .list-group > .list-group-item:first-child,
+#layers h4 + .list-group > .list-group-item:first-child {
 	border-top: none;
 }
 
@@ -185,16 +204,23 @@ body.dragging, body.dragging * {
 
 /* Feature popup */
 #feature-popup {
-	max-width: 400px;
+	max-width: 50vw;
 	position: relative;
 }
 
 #feature-popup button.close {
-	margin-right: 5px;
+	position: absolute;
+	top: 5px;
+	right: 20px;
 }
 
 #feature-popup .popover-title:empty {
 	display: none;
+}
+
+#feature-popup .popover-content {
+	max-height: 80vh;
+	overflow-y: auto;
 }
 
 #feature-popup td {
