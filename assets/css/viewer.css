@@ -18,6 +18,13 @@ html, body {
 	background: #C1DEE5; /* Same color as OpenTopo */
 }
 
+#geocoder {
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	width: 350px;
+}
+
 #layers {
 	position: absolute;
 	top: 0;
@@ -63,7 +70,7 @@ html, body {
 	outline: none;
 }
 
-#layers .layer-filter input:invalid + .input-group-btn .clear-button {
+.input-group > input:invalid + .input-group-btn .clear-button {
 	display: none;
 }
 

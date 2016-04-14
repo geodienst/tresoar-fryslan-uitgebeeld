@@ -7,6 +7,7 @@
 		<title>Tresoar viewer</title>
 		<link rel="stylesheet" href="assets/css/bootstrap.min.css">
 		<link rel="stylesheet" href="assets/css/ol.css">
+		<link rel="stylesheet" href="assets/css/typeaheadjs.css">
 		<link rel="stylesheet" href="assets/css/viewer.css">
 		<script src="assets/js/proj4.js" type="text/javascript"></script>
 		<script src="assets/js/ol-debug.js"></script>
@@ -15,6 +16,7 @@
 		<script src="assets/js/transparency.min.js"></script>
 		<script src="assets/js/jquery-sortable.min.js"></script>
 		<script src="assets/js/string_score.js"></script>
+		<script src="assets/js/typeahead.bundle.js"></script>
 	</head>
 	<body>
 		<div id="map" class="map"></div>
@@ -39,6 +41,15 @@
 
 		<div id="feature-selection-menu" class="dropdown-menu">
 			<li><a href="#"></a></li>
+		</div>
+
+		<div id="geocoder">
+			<div class="input-group">
+				<span class="input-group-addon">
+					<span class="glyphicon glyphicon-search"></span>
+				</span>
+				<input type="text" id="address-query" class="form-control" data-provider="pdok-geocoder" placeholder="Zoek een adres…">
+			</div>
 		</div>
 
 		<div id="layers">
@@ -756,11 +767,32 @@
 				}
 			});
 
+			$('#address-query').on('typeahead:select', function(e, address) {
+				switch (address.niveau) {
+					case 'huisnummer':
+						var maxZoom = 23;
+						break;
+					case 'straat':
+						var maxZoom = 18;
+						break;
+					case 'plaats':
+					default:
+						var maxZoom = 14;
+						break;
+				}
+
+				map.getView().fit(
+					new ol.geom.Point(address.pos.split(/\s/).map(parseFloat)),
+					map.getSize(),
+					{maxZoom: maxZoom});
+			});
+
 			if ('layerPanelWidth' in localStorage) {
 				setLayerPanelWidth(localStorage['layerPanelWidth']);
 			}
 		</script>
 		<script src="assets/js/tresoar-feature-layers.js"></script>
 		<script src="assets/js/tresoar-raster-layers.js"></script>
+		<script src="assets/js/pdok-geocoder.js"></script>
 	</body>
 </html>
