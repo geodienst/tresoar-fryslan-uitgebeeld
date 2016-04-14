@@ -46,19 +46,29 @@ html, body {
     margin: 0;
 }
 
-#layers input[type=search] {
+#layers .layer-filter {
 	margin: 0;
 	width: 100%;
 	background: transparent;
 	border: none;
-	border-top: 1px solid #ccc;
-	border-bottom: 1px solid #ccc;
-	padding: 10px;
 }
 
-#layers input[type=search]:focus {
+#layers .layer-filter .form-control,
+#layers .layer-filter .btn {
+	border-radius: 0;
+}
+
+#layers .layer-filter input:focus {
 	background: white;
 	outline: none;
+}
+
+#layers .layer-filter input:invalid + .input-group-btn .clear-button {
+	display: none;
+}
+
+#layers .layer-filter .input-group-btn > .btn:last-child {
+	border-right: 0;
 }
 
 #layers .list-group {
@@ -73,8 +83,12 @@ html, body {
     white-space: nowrap;
 }
 
-#layers input[type=search] + .list-group > .list-group-item:first-child {
+#layers .layer-filter + .list-group > .list-group-item:first-child {
 	border-top: none;
+}
+
+#layers .layer-filter .input-group-btn > .btn:focus {
+	z-index: 3;
 }
 
 #layers .layer .thumbnail {

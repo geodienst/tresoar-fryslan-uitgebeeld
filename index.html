@@ -59,7 +59,15 @@
 
 				<h4>Beschikbare kaarten</h4>
 
-				<input type="search" id="layer-filter" placeholder="Zoek lagen…">
+				<div class="input-group layer-filter">
+					<input type="text" id="layer-filter-query" class="form-control" placeholder="Zoek lagen…" required>
+					<div class="input-group-btn">
+						<button class="btn btn-default clear-button" aria-label="Wissen">&times;</button>
+						<button class="btn btn-default search-button" aria-label="Zoek">
+							<span class="glyphicon glyphicon-search"></span>
+						</button>
+					</div>
+				</div>
 
 				<div id="available-raster-layers" class="layers available-layers list-group">
 					<button type="button" class="layer add-layer-button list-group-item" data-toggle="tooltip" data-placement="right">
@@ -230,6 +238,11 @@
 				var activeLayerIds = map.getLayers().getArray().map(function(layer) {
 					return layer.get('id'); });
 
+				// Hide all tooltips before refreshing the list because sometimes the element
+				// a tooltip was connected to is removed, and then there is no onmouseout-event
+				// left to hide the tooltip :(
+				$('#layers [data-toggle="tooltip"]').tooltip('hide');
+
 				$('#active-layers').render(
 					Array.prototype.slice.call(map.getLayers().getArray())
 						.map(function(layer) {
@@ -253,7 +266,7 @@
 						},
 						'remove-layer-button': {
 							'data-tooltip': function() {
-								return 'Verplaats ' + this.layer['layer-name'] + ' terug naar \'Beschikbare kaarten\'';
+								return 'Verplaats ' + this.layer.id + ' terug naar \'Beschikbare kaarten\'';
 							}
 						}
 					}
@@ -272,7 +285,7 @@
 
 				var visibleExtent = map.getView().calculateExtent(map.getSize());
 
-				var query = $('#layer-filter').val().toLowerCase();
+				var query = $('#layer-filter-query').val().toLowerCase();
 
 				function getSurface(extent) {
 					var size = ol.extent.getSize(extent);
@@ -330,7 +343,7 @@
 								return this.layer.id;
 							},
 							'data-tooltip': function() {
-								return 'Verplaats ' + this.layer['layer-name'] + ' naar \'zichtbare kaarten\''
+								return 'Verplaats ' + this.layer.id + ' naar \'zichtbare kaarten\''
 									+ '(Score: ' + this.layer.score.toFixed(3) + ')';
 							}
 						},
@@ -375,6 +388,10 @@
 			$('#layers').tooltip({
 				container: 'body',
 				selector: '[data-toggle="tooltip"]',
+				delay: {
+					show: 500,
+					hide: 250
+				},
 				title: function() {
 					return $(this).attr('data-tooltip') || $(this).attr('title');
 				}
@@ -388,12 +405,11 @@
 
 				// set $item relative to cursor position
 				onDragStart: function ($item, container, _super) {
-					var offset = $item.offset(),
-						pointer = container.rootGroup.pointer;
+					var pointer = container.rootGroup.pointer;
 
 					adjustment = {
-						left: pointer.left - offset.left,
-						top: pointer.top - offset.top
+						left: pointer.left,
+						top: pointer.top
 					};
 
 					_super($item, container);
@@ -427,13 +443,33 @@
 				}
 			});
 
+			// Scheduling and triggering layer list updates. Please use schedule
+			// as much as possible for example while panning the map or typing in
+			// the search field. It will delay the actual update while the user
+			// is still entering new data. triggerUpdateLayerList will clear the
+			// scheduled update and run immediately. use this instead of 
+			// updateLayerList directly to prevent updating the list, and then
+			// update the list again when the scheduled update is fired.
+
+			var layerListTimeout;
+
+			function scheduleUpdateLayerList() {
+				clearTimeout(layerListTimeout);
+				layerListTimeout = setTimeout(triggerUpdateLayerList, 500);
+			}
+
+			function triggerUpdateLayerList() {
+				clearTimeout(layerListTimeout);
+				updateLayerList();
+			}
+
 			// Update the layer list now
-			updateLayerList();
+			triggerUpdateLayerList();
 
 			// Update the layer list every time a layer is enabled or disabled
-			map.getLayers().on('add', updateLayerList);
+			map.getLayers().on('add', triggerUpdateLayerList);
 			
-			map.getLayers().on('remove', updateLayerList);
+			map.getLayers().on('remove', triggerUpdateLayerList);
 
 			var featureOverlay = new ol.layer.Vector({
 				map: map,
@@ -498,7 +534,15 @@
 				}
 			});
 
-			$('#layer-filter').on('search', updateLayerList);
+			// Layer searching
+			$('#layer-filter-query').on('keyup', scheduleUpdateLayerList);
+
+			$('#layers .layer-filter .search-button').on('click', triggerUpdateLayerList);
+
+			$('#layers .layer-filter .clear-button').on('click', function() {
+				$('#layer-filter-query').val('');
+				triggerUpdateLayerList();
+			});
 
 			// Feature popup
 			var popup = new ol.Overlay({
@@ -632,19 +676,19 @@
 				}
 			});
 
+			// Make the cursor a pointer for anything clickable
 			map.on('pointermove', function(e) {
 				var pixel = map.getEventPixel(e.originalEvent);
 				var hit = map.hasFeatureAtPixel(pixel);
 				map.getTarget().style.cursor = hit ? 'pointer' : '';
 			});
 
-			map.getView().on('change:center', (function() {
-				var timeout;
-				return function() {
-					clearTimeout(timeout);
-					timeout = setTimeout(updateLayerList, 500);
-				};
-			})());
+			// Update the layer list when panning
+			map.getView().on('change:center', scheduleUpdateLayerList);
+
+			// map.getView().on('change:resolution', function() {
+			// 	console.log(this.getResolution());
+			// });
 
 			// Map extents for discoverability
 			/*
