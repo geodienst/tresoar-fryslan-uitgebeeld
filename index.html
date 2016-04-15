@@ -80,30 +80,22 @@
 					</div>
 				</div>
 
-				<div id="available-raster-layers" class="layers available-layers">
+				<div id="available-layers" class="layers available-layers">
 					<div class="layer-group">
 						<h4 class="layer-group-header">
 							<span class="layer-group-name">Group name</span>
+							<span class="layer-group-count badge">0</span>
 							<button class="group-toggle">
 								<span class="glyphicon glyphicon-minus"></span>
 							</button>
 						</h4>
 						<div class="layers list-group">
 							<button type="button" class="layer add-layer-button list-group-item" data-toggle="tooltip" data-placement="right">
-								<img class="thumbnail" src="">
+								<img class="thumbnail" src="#">
 								<span class="name"></span>
 							</button>
 						</div>
 					</div>
-				</div>
-
-				<h4>Beschikbare overlays</h4>
-				
-				<div id="available-feature-layers" class="layers available-layers list-group">
-					<button type="button" class="layer add-layer-button list-group-item">
-						<span class="glyphicon glyphicon-plus-sign"></span>
-						<span class="layer-name"></span>
-					</button>
 				</div>
 			</div>
 		</div>
@@ -113,6 +105,17 @@
 
 			document.domain = 'geodienst.dev';
 
+			if (!Array.prototype.find) {
+				Array.prototype.find = function(filter) {
+					for (var i = 0; i < this.length; ++i) {
+						if (filter(this[i])) {
+							return this[i];
+						}
+					}
+					return undefined;
+				};
+			}
+
 			// Helper for jQuery.ajax and co. to easily use proxy server to go around CSRP
 			$.ajaxPrefilter(function(options) {
 				if (options.crossdomain) {
@@ -121,8 +124,6 @@
 					options.crossdomain = false;
 				}
 			});
-
-			var TRESOAR_WMS_URL = 'http://geoserver.geodienst.dev/ows';
 
 			proj4.defs("EPSG:28992", "+proj=sterea +lat_0=52.15616055555555 +lon_0=5.38763888888889 +k=0.9999079 +x_0=155000 +y_0=463000  +ellps=bessel  +towgs84=565.040,49.910,465.840,-0.40939,0.35971,-1.86849,4.0772 +units=m +no_defs");
 		
@@ -135,32 +136,39 @@
 			var projection = EPSG28992;
 			var projectionExtent = [-285401.92,22598.08,595401.9199999999,903401.9199999999];
 			var size = ol.extent.getWidth(projectionExtent) / 256;
-			var resolutions = [3440.64, 1720.32, 860.16, 430.08, 215.04, 107.52, 53.76, 26.88, 13.44, 6.72, 3.36, 1.68, 0.84, 0.42]
+			var resolutions = [3440.64, 1720.32, 860.16, 430.08, 215.04, 107.52, 53.76, 26.88, 13.44, 6.72, 3.36, 1.68, 0.84, 0.42, 0.21];
 			
 			// generate resolutions and matrixIds arrays for this WMTS
-			var matrixIds = new Array(resolutions.length);
-			for (var z = 0; z < matrixIds.length; ++z) {
-				matrixIds[z] = 'EPSG:28992:' + z;
-			}
-
-			//FIXME this is ugly 
-			//generate resolutions and matrixIds for luchtfoto
-			var matrixIds2 = new Array(resolutions.length);
-			for (var i = 0; i < resolutions.length; ++i) {
-				matrixIds2[i] = (i < 10 ? "0" : "") + i;
-			}
+			var matrixIds = resolutions.map(function(resolution, index) { return 'EPSG:28992:' + index; });
+			
+			window.config = {};
 
 			window.groups = [];
 
-			$.getJSON('metadata/groups.json', function(data) {
-				window.groups = data.groups.map(function(group) {
-					return {
-						name: group.name,
-						pattern: new RegExp(group.pattern)
-					};
+			window.loaders = {};
+
+			$.getJSON('metadata/config.json')
+				.fail(function(error) {
+					alert('Config.json kon niet worden geladen');
+				})
+				.done(function(config) {
+					window.config = config;
+
+					// Fetch new layers from all sources
+					config.sources.forEach(function(source) {
+						window.loaders[source.type](source.url);
+					});
+
+					// Update the layer group definitions
+					window.groups = config.groups.map(function(group) {
+						return {
+							name: group.name,
+							pattern: new RegExp(group.pattern)
+						};
+					});
+
+					scheduleUpdateLayerList();
 				});
-				scheduleUpdateLayerList();
-			});
 
 
 			// FIXME it would be more awesome if we could retrieve this list (excl the base layers)
@@ -235,7 +243,7 @@
 						tileGrid: new ol.tilegrid.WMTS({
 							origin: ol.extent.getTopLeft(projectionExtent),
 							resolutions: resolutions,
-							matrixIds: matrixIds2
+							matrixIds: matrixIds.map(function(n) { return n < 10 ? "0" + n : n; })
 						})
 					})
 				})
@@ -263,7 +271,7 @@
 				var $layers = $('#active-layers').find('.layer');
 				$layers
 					.map(function() { return $(this).prop('data-layer-id'); })
-					.each(function(i) { layers[this].setZIndex($layers.length - 1 - i); });
+					.each(function(i) { window.layers[this].setZIndex($layers.length - 1 - i); });
 			}
 
 			// Render the list of layers (using Transparency.js templating)
@@ -277,20 +285,22 @@
 				$('#layers [data-toggle="tooltip"]').tooltip('hide');
 
 				$('#active-layers').render(
-					Array.prototype.slice.call(map.getLayers().getArray())
-						.map(function(layer) {
-							return {
-								layer: {
-									'id': layer.get('id'),
-									'z-index': layer.getZIndex(),
-									'layer-name': layer.get('name'),
-									'opacity': layer.getOpacity() * 100
-								}
-							};
-						})
-						.sort(function(a, b) {
-							return b['layer']['z-index'] - a['layer']['z-index'];
-						}),
+					$.makeArray(map.getLayers().getArray())
+					// Extract all the attributes we want to render from the layers
+					.map(function(layer) {
+						return {
+							layer: {
+								'id': layer.get('id'),
+								'z-index': layer.getZIndex(),
+								'layer-name': layer.get('name'),
+								'opacity': layer.getOpacity() * 100
+							}
+						};
+					})
+					// Sort the layers by their z-index
+					.sort(function(a, b) {
+						return b['layer']['z-index'] - a['layer']['z-index'];
+					}),
 					{ // directives on how to render this stuff
 						'layer': {
 							'data-layer-id': function() {
@@ -331,9 +341,17 @@
 					if (activeLayerIds.indexOf(layer.get('id')) >= 0)
 						return null;
 
-					// Only show layers that are raster layers
-					if (layer.constructor != ol.layer.Tile)
-						return null;
+					switch (layer.constructor) {
+						case ol.layer.Tile:
+							var type = 'raster';
+							break;
+						case ol.layer.Vector:
+							var type = 'vector';
+							break;
+						default:
+							var type = 'undefined';
+							break;
+					}
 
 					var score = 0;
 
@@ -363,7 +381,8 @@
 						layer: {
 							'id': layer.get('id'),
 							'name': layer.get('name'),
-							'thumbnail': layer.get('thumbnail'),
+							'thumbnail': layer.get('thumbnail') || '#',
+							'type': type,
 							'score': score
 						}
 					};
@@ -371,7 +390,10 @@
 
 				// sort layers in size (smaller on top)
 				rasterLayers = rasterLayers.sort(function(a, b) {
-					return b.layer.score - a.layer.score;
+					if (a.layer.score != b.layer.score)
+							return b.layer.score - a.layer.score;
+						else
+							return a.layer.name.localeCompare(b.layer.name);
 				});
 
 				// group layers by group as defined by window.groups (or groups.json indirectly)
@@ -402,7 +424,21 @@
 					return layer;
 				});
 
-				$('#available-raster-layers').render(rasterLayers,
+				// sort the groups again using the order defined in the config
+				rasterLayers = rasterLayers.sort(function(a, b) {
+					var ai, bi;
+					
+					for (var i = 0; i < window.groups.length; ++i) {
+						if (window.groups[i].name == a['layer-group-name'])
+							ai = i;
+						if (window.groups[i].name == b['layer-group-name'])
+							bi = i;
+					}
+
+					return ai - bi;
+				});
+
+				$('#available-layers').render(rasterLayers,
 					{ // directives on how to render this stuff
 						'layer-group': {
 							'data-group-id': function() {
@@ -410,6 +446,11 @@
 							},
 							'data-collapsed': function() {
 								return groupCollapsed[this['layer-group-name']] ? 'collapsed' : '';
+							}
+						},
+						'layer-group-count': {
+							text: function() {
+								return this.layers.length;
 							}
 						},
 						'layers': {
@@ -426,48 +467,6 @@
 										return this.thumbnail;
 									}
 								}
-							}
-						}
-					}
-				);
-				
-				$('#available-feature-layers').render(
-					$.map(layers, function(layer) {
-						// If the layer is already on the map, hide it in the available list
-						if (activeLayerIds.indexOf(layer.get('id')) >= 0)
-							return null;
-
-						// Only render layers that are feature layers
-						if (layer.constructor != ol.layer.Vector)
-							return null;
-
-						var score = 0;
-
-						if (query != '') {
-							score = layer.get('name').score(query, 0.3)
-
-							// Hide non-matches completely
-							if (score < 0.1)
-								return null;
-						}
-
-						return {
-							layer: {
-								'id': layer.get('id'),
-								'score': score,
-								'layer-name': layer.get('name')
-							}
-						};
-					}).sort(function(a, b) { // sort layers by score, and then alphabetically
-						if (a.layer.score != b.layer.score)
-							return b.layer.score - a.layer.score;
-						else
-							return a.layer['layer-name'].localeCompare(b.layer['layer-name']);
-					}),
-					{ // directives on how to render this stuff
-						'layer': {
-							'data-layer-id': function() {
-								return this.layer.id;
 							}
 						}
 					}
@@ -520,7 +519,7 @@
 			});
 
 			// Also enable dragging layers from the available list to the enabled list
-			$('#available-feature-layers, #available-raster-layers').sortable({
+			$('#available-layers').sortable({
 				group: 'layers',
 				drop: false,
 				nested: false,
@@ -581,7 +580,7 @@
 
 			$('#layers').on('click', '.add-layer-button', function(e) {
 				var layerId = $(this).attr('data-layer-id');
-				var layer = layers[layerId];
+				var layer = window.layers[layerId];
 				// Remove the bounding box overlay if that is still shown
 				if (layer.get('bbox'))
 					featureOverlay.getSource().removeFeature(layer.get('bbox'));
@@ -595,7 +594,7 @@
 
 			$('#layers').on('click', '.remove-layer-button', function(e) {
 				var layerId = $(this).closest('.layer').attr('data-layer-id');
-				var layer = layers[layerId];
+				var layer = window.layers[layerId];
 				if (layer.get('bbox'))
 					featureOverlay.getSource().removeFeature(layer.get('bbox'));
 				map.removeLayer(layer);
@@ -603,12 +602,12 @@
 
 			$('#layers').on('change', '.layer input[name=opacity]', function(e) {
 				var layerId = $(this).closest('.layer').attr('data-layer-id');
-				layers[layerId].setOpacity(this.value / 100);
+				window.layers[layerId].setOpacity(this.value / 100);
 			});
 
 			$('#layers').on('mouseover', '.layer', function(e) {
 				var layerId = $(this).attr('data-layer-id');
-				var layer = layers[layerId];
+				var layer = window.layers[layerId];
 				if (layer.get('bbox')) {
 					featureOverlay.getSource().addFeature(layer.get('bbox'));
 				}
@@ -618,7 +617,7 @@
 			// the list e.g. when the layer is added to the active list.
 			$('#layers').on('mouseout', '.layer', function(e) {
 				var layerId = $(this).attr('data-layer-id');
-				var layer = layers[layerId];
+				var layer = window.layers[layerId];
 				if (layer.get('bbox') !== undefined && featureOverlay.getSource().getFeatures().indexOf(layer.get('bbox')) !== -1) {
 					featureOverlay.getSource().removeFeature(layer.get('bbox'));
 				}
@@ -827,7 +826,7 @@
 			*/
 
 			// Start with an Open Topo achtergrond kaart as layer
-			map.addLayer(layers.opentopo);
+			map.addLayer(window.layers.opentopo);
 
 			var pos = null;
 			var width = 0;

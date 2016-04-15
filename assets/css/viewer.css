@@ -113,6 +113,10 @@ html, body {
 	border-top: none;
 }
 
+#layers h4 + .input-group {
+	margin-top: -1px; /* Collapses the top border with the bottom-border of the h4 */
+}
+
 #layers .layer-filter .input-group-btn > .btn:focus {
 	z-index: 3;
 }
@@ -125,7 +129,7 @@ html, body {
 	border: 0;
 }
 
-#layers .layer .thumbnail[src=""] {
+#layers .layer .thumbnail[src="#"] {
 	display: none;
 }
 
@@ -223,8 +227,14 @@ body.dragging, body.dragging * {
 	overflow-y: auto;
 }
 
+#feature-popup th {
+	padding: 0.25em 0.125em;
+	vertical-align: top;
+}
+
 #feature-popup td {
     word-break: break-word;
+    white-space: pre-wrap;
 }
 
 #feature-selection-menu {
