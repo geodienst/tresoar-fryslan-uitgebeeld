@@ -177,9 +177,9 @@
 			// Could we then also access the extents of each layer? Then we can filter the list by
 			// intersecting those with the current view extents.
 			window.layers = {
-				brt: new ol.layer.Tile({
-					id: 'brt',
-					name: 'Achtergrondkaart BRT',
+				'ACHTERGROND:BRT': new ol.layer.Tile({
+					id: 'ACHTERGROND:BRT',
+					name: 'BRT',
 					extent: projectionExtent,
 					source: new ol.source.WMTS({
 						url: 'http://geodata.nationaalgeoregister.nl/tiles/service/wmts/brtachtergrondkaart',
@@ -199,9 +199,9 @@
 					})
 				}),
 
-				opentopo: new ol.layer.Tile({
-					id: 'opentopo',
-					name: 'Achtergrondkaart OpenTopo',
+				'ACHTERGROND:OPENTOPO': new ol.layer.Tile({
+					id: 'ACHTERGROND:OPENTOPO',
+					name: 'OpenTopo',
 					extent: projectionExtent,
 					source: new ol.source.TileArcGISRest({
 						url: 'https://services.arcgisonline.nl/arcgis/rest/services/Basiskaarten/Open_Topo/MapServer',
@@ -221,9 +221,9 @@
 					})
 				}),
 
-				lufo: new ol.layer.Tile({
-					id: 'lufo',
-					name: 'Achtergrondkaart Luchtfoto\'s',
+				'ACHTERGROND:LUFO': new ol.layer.Tile({
+					id: 'ACHTERGROND:LUFO',
+					name: 'Luchtfoto\'s',
 					extent: projectionExtent,
 					source: new ol.source.WMTS({
 						url: 'http://geodata1.nationaalgeoregister.nl/luchtfoto/wmts',
@@ -918,7 +918,7 @@
 			*/
 
 			// Start with an Open Topo achtergrond kaart as layer
-			map.addLayer(window.layers.opentopo);
+			map.addLayer(window.layers['ACHTERGROND:OPENTOPO']);
 
 			var pos = null;
 			var width = 0;

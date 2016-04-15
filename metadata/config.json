@@ -41,12 +41,16 @@
 			"pattern": "^0$"
 		},
 		{
-			"name": "Overig",
-			"pattern": "^tresoar:.+?"
+			"name": "Achtergrondkaarten",
+			"pattern": "^ACHTERGROND:.+"
 		},
 		{
 			"name": "Overlays",
 			"pattern": "^PGR:.+?"
+		},
+		{
+			"name": "Overig Tresoar",
+			"pattern": "^tresoar:.+"
 		},
 		{
 			"name": "Wat moet dit hier?",
