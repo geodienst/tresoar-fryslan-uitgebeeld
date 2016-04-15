@@ -1,6 +1,10 @@
 {
 	"sources_disabled": [
-		
+		{
+			"omschrijving": "states en stinzen en nog veel meer",
+			"type": "WFS",
+			"url": "http://geoportaal.fryslan.nl/arcgis/services/ProvinciaalGeoRegister/PGR_features/GeoDataServer/WFSServer"
+		}
 	],
 	"sources": [
 		{
@@ -17,11 +21,6 @@
 			"omschrijving": "Bonnebladen",
 			"type": "WMS",
 			"url": "https://geo.rug.nl/arcgis/services/HistorischeKaarten/Bonnebladen/ImageServer/WMSServer"
-		},
-		{
-			"omschrijving": "states en stinzen en nog veel meer",
-			"type": "WFS",
-			"url": "http://geoportaal.fryslan.nl/arcgis/services/ProvinciaalGeoRegister/PGR_features/GeoDataServer/WFSServer"
 		}
 	],
 	"groups": [

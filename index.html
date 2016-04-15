@@ -246,7 +246,99 @@
 							matrixIds: matrixIds.map(function(n) { return n < 10 ? "0" + n : n; })
 						})
 					})
+				}),
+
+				'PGR:CHK2_StinzenStates': new ol.layer.Vector({
+					id: 'PGR:CHK2_StinzenStates',
+					name: 'Stinzen en States',
+					bbox: new ol.Feature({
+						geometry: new ol.geom.Polygon([[
+							[148209.8999999985, 538183.3000000007],
+							[213013.49130000174, 538183.3000000007],
+							[213013.49130000174, 606238.3000000007],
+							[148209.8999999985, 606238.3000000007]
+						]], 'XY')
+					}),
+					extent: [
+						148209.8999999985, 538183.3000000007,
+						213013.49130000174, 606238.3000000007],
+					source: new ol.source.Vector({
+						loader: function(extent, resolution, projection) {
+							$.ajax('http://geoportaal.fryslan.nl/arcgis/services/ProvinciaalGeoRegister/PGR_features/GeoDataServer/WFSServer', {
+								type: 'GET',
+								crossdomain: true,
+								data: {
+									service: 'WFS',
+									version: '1.0.0',
+									request: 'GetFeature',
+									typename: 'PGR:CHK2_StinzenStates',
+									srsname: 'EPSG:28992', // todo: get this info from $feature?
+									bbox: [
+										148209.8999999985, 538183.3000000007,
+										213013.49130000174, 606238.3000000007].join(',')
+								}
+							}).done(function(data) {
+								var format = new ol.format.GML2();
+								this.addFeatures(format.readFeatures(data));
+							}.bind(this));
+						},
+						strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({
+							maxZoom: 19
+						})),
+						projection: 'EPSG:28992'
+					}),
+					style: function(feature) {
+						var color = 'green';
+
+						switch (feature.get('TYPE')) {
+							case 'Boerderij, State/Buitenplaats':
+								color = '#5823df';
+								break;
+							case 'Buitenplaats':
+								color = '#1e95f0';
+								break;
+							case 'Stins':
+								color = '#c863bb';
+								break;
+							case 'Stins, Boerderij':
+								color = '#1be08e';
+								break;
+							case 'Stins, Boerderij, State/Buitenplaats':
+								color = '#d77674';
+								break;
+							case 'Stins, State/Buitenplaats':
+								color = '#e3c91b';
+								break;
+							default:
+								color = '#8dca75';
+								break;
+						}
+						
+						return new ol.style.Style({
+							stroke: new ol.style.Stroke({
+								color: 'black',
+								width: 0.8
+							}),
+							fill: new ol.style.Fill({
+								color: color
+							})
+						});
+					}
 				})
+
+				/*
+				test2: new ol.layer.Tile({
+					id: 'test2',
+					name: 'MapServer test',
+					source: new ol.source.TileArcGISRest({
+						url: 'http://geoportaal.fryslan.nl/arcgis/rest/services/ProvinciaalGeoRegister/PGR/MapServer',
+						params: {
+							layers: 'show:85'
+						}
+						// todo: when clicking query /identify?
+					})
+				})
+				*/
 			};
 
 			var map = new ol.Map({
