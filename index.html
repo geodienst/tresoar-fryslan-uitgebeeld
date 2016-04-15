@@ -287,43 +287,43 @@
 						})),
 						projection: 'EPSG:28992'
 					}),
-					style: function(feature) {
-						var color = 'green';
+					style: (function() {
+						var colors = {
+							'Boerderij, State/Buitenplaats': [88, 35, 223, 0.8],
+							'Buitenplaats': [30, 149, 240, 0.8],
+							'Stins': [200, 99, 187, 0.8],
+							'Stins, Boerderij': [27, 224, 142, 0.8],
+							'Stins, Boerderij, State/Buitenplaats': [215, 118, 116, 0.8],
+							'Stins, State/Buitenplaats': [227, 201, 27, 0.8],
+							'': [141, 202, 117, 0.8]
+						};
 
-						switch (feature.get('TYPE')) {
-							case 'Boerderij, State/Buitenplaats':
-								color = '#5823df';
-								break;
-							case 'Buitenplaats':
-								color = '#1e95f0';
-								break;
-							case 'Stins':
-								color = '#c863bb';
-								break;
-							case 'Stins, Boerderij':
-								color = '#1be08e';
-								break;
-							case 'Stins, Boerderij, State/Buitenplaats':
-								color = '#d77674';
-								break;
-							case 'Stins, State/Buitenplaats':
-								color = '#e3c91b';
-								break;
-							default:
-								color = '#8dca75';
-								break;
-						}
-						
-						return new ol.style.Style({
-							stroke: new ol.style.Stroke({
-								color: 'black',
-								width: 0.8
-							}),
-							fill: new ol.style.Fill({
-								color: color
-							})
-						});
-					}
+						// Make styles from the colors and store them
+						// in an object, with the TYPE value as key.
+						var styles = $.map(colors, function(value, key) {
+							return {
+								key: key,
+								value: new ol.style.Style({
+									stroke: new ol.style.Stroke({
+										color: 'black',
+										width: 0.8
+									}),
+									fill: new ol.style.Fill({
+										color: value
+									})
+								})
+							};
+						}).reduce(function(result, pair) {
+							result[pair.key] = pair.value;
+							return result;
+						}, {});
+
+						// The real 'style' feature is now nothing more than a
+						// lookup feature. Such speed, much quickness.
+						return function(feature) {
+							return styles[feature.get('TYPE')];
+						};
+					})()
 				})
 
 				/*

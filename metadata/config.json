@@ -4,17 +4,17 @@
 			"omschrijving": "states en stinzen en nog veel meer",
 			"type": "WFS",
 			"url": "http://geoportaal.fryslan.nl/arcgis/services/ProvinciaalGeoRegister/PGR_features/GeoDataServer/WFSServer"
+		},
+		{
+			"omschrijving": "Data van Annemarie",
+			"type": "WFS",
+			"url": "http://geoserver.geodienst.dev/ows"
 		}
 	],
 	"sources": [
 		{
 			"omschrijving": "Alle gegeorefereerde kaarten",
 			"type": "WMS",
-			"url": "http://geoserver.geodienst.dev/ows"
-		},
-		{
-			"omschrijving": "Levert een States en Stinzen kopie",
-			"type": "WFS",
 			"url": "http://geoserver.geodienst.dev/ows"
 		},
 		{
