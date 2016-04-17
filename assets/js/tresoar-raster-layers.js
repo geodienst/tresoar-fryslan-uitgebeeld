@@ -64,8 +64,9 @@ window.loaders.WMS = function(url) {
 					layers: name,
 					crs: 'EPSG:28992',
 					srs: 'EPSG:28992',
-					width: 300,
-					height: 300,
+					width: 256,
+					height: 256,
+					tiled: true,
 					bbox: bbox.getGeometry().getExtent().join(',')
 				}),
 				source: new ol.source.TileWMS({

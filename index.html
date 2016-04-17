@@ -91,7 +91,9 @@
 						</h4>
 						<div class="layers list-group">
 							<button type="button" class="layer add-layer-button list-group-item" data-toggle="tooltip" data-placement="right">
-								<img class="thumbnail" src="#">
+								<div class="thumbnail-container">
+									<img class="thumbnail" src="#" width="256" height="256">
+								</div>
 								<span class="name"></span>
 							</button>
 						</div>
@@ -604,6 +606,11 @@
 								'data-tooltip': function() {
 									return 'Verplaats ' + this.layer.id + ' naar \'zichtbare kaarten\''
 										+ '(Score: ' + this.layer.score.toFixed(3) + ')';
+								},
+								'thumbnail-container': {
+									'data-visible': function() {
+										return this.thumbnail != '#' ? 'visible' : '';
+									}
 								},
 								'thumbnail': {
 									'src': function() {
