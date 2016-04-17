@@ -3,6 +3,31 @@ var Viewer = function() {
 	//todo
 };
 
+Viewer.AvailableLayer = React.createClass({
+	displayName: 'AvailableLayer',
+	render: function() {
+		return React.createElement('button', {
+				'key': this.props.id,
+				'type': 'button',
+				'className': 'layer add-layer-button list-group-item',
+				'data-layer-id': this.props.id,
+				'data-tooltip': 'Voeg \'' + this.props.id + '\' toe aan de zichtbare kaarten',
+				'data-toggle': 'tooltip',
+				'data-placement': 'right'
+			},
+			this.props.thumbnail ? React.createElement('div', {'className': 'thumbnail-container'},
+				React.createElement('img', {
+					'className': 'thumbnail',
+					'src': this.props.thumbnail,
+					'width': 256,
+					'height': 256
+				})
+			) : null,
+			React.createElement('span', {'className': 'name'}, this.props.name)
+		);
+	}
+});
+
 Viewer.LayerList = React.createClass({
 	displayName: 'LayerList',
 	render: function() {
@@ -22,25 +47,7 @@ Viewer.LayerList = React.createClass({
 					),
 					React.createElement('div', {'className': 'layers list-group'},
 						group.layers.map(function(layer) {
-							return React.createElement('button', {
-									'key': layer.id,
-									'type': 'button',
-									'className': 'layer add-layer-button list-group-item',
-									'data-layer-id': layer.id,
-									'data-tooltip': 'Voeg \'' + layer.id + '\' toe aan de zichtbare kaarten',
-									'data-toggle': 'tooltip',
-									'data-placement': 'right'
-								},
-								layer.thumbnail ? React.createElement('div', {'className': 'thumbnail-container'},
-									React.createElement('img', {
-										'className': 'thumbnail',
-										'src': layer.thumbnail,
-										'width': 256,
-										'height': 256
-									})
-								) : null,
-								React.createElement('span', {'className': 'name'}, layer.name)
-							);	
+							return 	React.createElement(Viewer.AvailableLayer, layer);
 						})
 					)
 				);
