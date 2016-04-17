@@ -122,10 +122,6 @@ html, body {
 }
 
 #layers .layer .thumbnail-container {
-	display: none;
-}
-
-#layers .layer .thumbnail-container[data-visible=visible] {
 	width: 100%;
 	display: block;
 	margin: 0;
@@ -134,7 +130,7 @@ html, body {
 	position: relative;
 }
 
-#layers .layer .thumbnail-container[data-visible=visible]:before {
+#layers .layer .thumbnail-container:before {
 	position: absolute;
 	left: 0;
 	top: 50%;
@@ -150,13 +146,13 @@ html, body {
 	content: "\e031";
 }
 
-#layers .layer .thumbnail-container[data-visible=visible]:after { /* make it square */
+#layers .layer .thumbnail-container:after { /* make it square */
 	content: '';
 	display: block;
 	padding-bottom: 100%;
 }
 
-#layers .layer .thumbnail {
+#layers .layer .thumbnail-container .thumbnail {
 	position: absolute;
 	left: 0;
 	top: 0;

@@ -17,6 +17,9 @@
 		<script src="assets/js/jquery-sortable.min.js"></script>
 		<script src="assets/js/string_score.js"></script>
 		<script src="assets/js/typeahead.bundle.js"></script>
+		<script src="assets/js/react.min.js"></script>
+		<script src="assets/js/react-dom.min.js"></script>
+		<script src="assets/js/viewer.js"></script>
 	</head>
 	<body>
 		<div id="map" class="map"></div>
@@ -412,6 +415,7 @@
 				})
 			});
 
+
 			function updateLayerZOrder() {
 				var $layers = $('#active-layers').find('.layer');
 				$layers
@@ -523,29 +527,27 @@
 					}
 					
 					return {
-						layer: {
-							'id': layer.get('id'),
-							'name': layer.get('name'),
-							'thumbnail': layer.get('thumbnail') || '#',
-							'type': type,
-							'score': score
-						}
+						'id': layer.get('id'),
+						'name': layer.get('name'),
+						'thumbnail': layer.get('thumbnail'),
+						'type': type,
+						'score': score
 					};
 				});
 
 				// sort layers in size (smaller on top)
 				rasterLayers = rasterLayers.sort(function(a, b) {
-					if (a.layer.score != b.layer.score)
-							return b.layer.score - a.layer.score;
+					if (a.score != b.score)
+							return b.score - a.score;
 						else
-							return a.layer.name.localeCompare(b.layer.name);
+							return a.name.localeCompare(b.name);
 				});
 
 				// group layers by group as defined by window.groups (or groups.json indirectly)
 				rasterLayers = rasterLayers.reduce(function(prev, current) {
 					// Find the right group
 					var group = groups.find(function(group) {
-						return group.pattern.test(current.layer.id);
+						return group.pattern.test(current.id);
 					});
 
 					// No group? Skip map completely right now
@@ -555,11 +557,11 @@
 					// Otherwise add map to the combined groups element
 					if (!(group.name in prev))
 						prev[group.name] = {
-							'layer-group-name': group.name,
-							'layers': [current]
+							name: group.name,
+							layers: [current]
 						};
 					else
-						prev[group.name]['layers'].push(current);
+						prev[group.name].layers.push(current);
 
 					return prev;
 				}, {});
@@ -574,53 +576,18 @@
 					var ai, bi;
 					
 					for (var i = 0; i < window.groups.length; ++i) {
-						if (window.groups[i].name == a['layer-group-name'])
+						if (window.groups[i].name == a.name)
 							ai = i;
-						if (window.groups[i].name == b['layer-group-name'])
+						if (window.groups[i].name == b.name)
 							bi = i;
 					}
 
 					return ai - bi;
 				});
 
-				$('#available-layers').render(rasterLayers,
-					{ // directives on how to render this stuff
-						'layer-group': {
-							'data-group-id': function() {
-								return this['layer-group-name'];
-							},
-							'data-collapsed': function() {
-								return groupCollapsed[this['layer-group-name']] ? 'collapsed' : '';
-							}
-						},
-						'layer-group-count': {
-							text: function() {
-								return this.layers.length;
-							}
-						},
-						'layers': {
-							'layer': {
-								'data-layer-id': function() {
-									return this.layer.id;
-								},
-								'data-tooltip': function() {
-									return 'Verplaats ' + this.layer.id + ' naar \'zichtbare kaarten\''
-										+ '(Score: ' + this.layer.score.toFixed(3) + ')';
-								},
-								'thumbnail-container': {
-									'data-visible': function() {
-										return this.thumbnail != '#' ? 'visible' : '';
-									}
-								},
-								'thumbnail': {
-									'src': function() {
-										return this.thumbnail;
-									}
-								}
-							}
-						}
-					}
-				);
+				ReactDOM.render(
+					React.createElement(Viewer.LayerList, {groups: rasterLayers}),
+					document.getElementById('available-layers'));
 			}
 
 			// Enable Bootstrap tooltips in the dynamic #layers list
