@@ -1,4 +1,4 @@
-window.loaders.WFS = function(url)
+Viewer.loaders.WFS = function(url, viewer)
 {
 	$.ajax(url, {
 		type: 'GET',
@@ -32,7 +32,7 @@ window.loaders.WFS = function(url)
 				var name = $feature.find('Name').text();
 
 				// Ugly side-effect implementation
-				window.layers[name] = new ol.layer.Vector({
+				viewer.addLayer(new ol.layer.Vector({
 					id: name,
 					name: $feature.find('Title').text(),
 					bbox: bbox,
@@ -66,7 +66,7 @@ window.loaders.WFS = function(url)
 							width: 2
 						})
 					})
-				});
+				}));
 
 				return bbox;
 			}).get();
@@ -98,7 +98,5 @@ window.loaders.WFS = function(url)
 			})
 		});
 		*/
-
-		updateLayerList();
 	});
 };

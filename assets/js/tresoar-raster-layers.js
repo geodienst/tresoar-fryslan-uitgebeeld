@@ -1,4 +1,4 @@
-window.loaders.WMS = function(url) {
+Viewer.loaders.WMS = function(url, viewer) {
 	var ns = {
 		wms: 'http://www.opengis.net/wms'
 	};
@@ -49,7 +49,7 @@ window.loaders.WMS = function(url) {
 			var title = getChildNodesByTagNameNS(ns.wms, layer, 'Title')[0].textContent;
 
 			// Ugly side-effect implementation
-			window.layers[name] = new ol.layer.Tile({
+			viewer.addLayer(new ol.layer.Tile({
 				id: name,
 				name: title,
 				extent: extent,
@@ -84,7 +84,7 @@ window.loaders.WMS = function(url) {
 						width: 2
 					})
 				})
-			});
+			}));
 
 			return bbox;
 		});
@@ -115,7 +115,5 @@ window.loaders.WMS = function(url) {
 			})
 		});
 		*/
-
-		updateLayerList();
 	});
 };

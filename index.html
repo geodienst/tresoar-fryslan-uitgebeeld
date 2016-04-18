@@ -19,7 +19,10 @@
 		<script src="assets/js/typeahead.bundle.js"></script>
 		<script src="assets/js/react.min.js"></script>
 		<script src="assets/js/react-dom.min.js"></script>
+		<script src="assets/js/util.js"></script>
 		<script src="assets/js/viewer.js"></script>
+		<script src="assets/js/tresoar-feature-layers.js"></script>
+		<script src="assets/js/tresoar-raster-layers.js"></script>
 	</head>
 	<body>
 		<div id="map" class="map"></div>
@@ -110,226 +113,174 @@
 
 			document.domain = 'geodienst.dev';
 
-			if (!Array.prototype.find) {
-				Array.prototype.find = function(filter) {
-					for (var i = 0; i < this.length; ++i) {
-						if (filter(this[i])) {
-							return this[i];
+			var viewer = new Viewer({
+				sources: [
+					{
+						"omschrijving": "Alle gegeorefereerde kaarten",
+						"type": "WMS",
+						"url": "http://geoserver.geodienst.dev/ows"
+					},
+					{
+						"omschrijving": "Bonnebladen",
+						"type": "WMS",
+						"url": "https://geo.rug.nl/arcgis/services/HistorischeKaarten/Bonnebladen/ImageServer/WMSServer"
+					}
+				],
+				groups: [
+					{
+						"name": "Atlas 1718",
+						"pattern": /^tresoar:NL_0400410000_3227_G_kluis.+?/
+					},
+					{
+						"name": "Atlas 1698",
+						"pattern": /^tresoar:NL_0400410000_K_186.+?/
+					},
+					{
+						"name": "Atlas 1664",
+						"pattern": /tresoar:NL_0400410000_3187a?_G_fol_.+?/
+					},
+					{
+						"name": "Bonnebladen",
+						"pattern": /^0$/
+					},
+					{
+						"name": "Achtergrondkaarten",
+						"pattern": /^ACHTERGROND:.+/
+					},
+					{
+						"name": "Overlays",
+						"pattern": /^PGR:.+?/
+					},
+					{
+						"name": "Overig Tresoar",
+						"pattern": /^tresoar:.+/
+					},
+					{
+						"name": "Wat moet dit hier?",
+						"pattern": /.+/
+					}
+				],
+				properties: [
+					{
+						"pattern": /^PGR:CHK2_StinzenStates$/,
+						"properties": function(pair) {
+							return [
+								"OBJECTID",
+								"UNI_NAAM",
+								"BUI_NAAM",
+								"STI_PLAATS",
+								"BP_NAAM",
+								"SIF_NAAM",
+								"PNN_NAAM",
+								"OPM_NAAM",
+								"OPM_CONTOU",
+								"OPM_BEBOUW",
+								"JR_NOOMEN",
+								"JR_SIF",
+								"JR_ANDERS",
+								"OPM_JAAR",
+								"OPM_ALGEME",
+								"HERKOMST_1",
+								"BEHEERDER",
+								"BRONHOUDER",
+								"TYPE",
+								"GLOBALID",
+								"SHAPE_Leng",
+								"SHAPE_Area"
+							].indexOf(pair.key) === -1;
+						}
+					},
+					{
+						"pattern": /.*/,
+						"properties": function(pair) {
+							return true;
 						}
 					}
-					return undefined;
-				};
-			}
-
-			// Helper for jQuery.ajax and co. to easily use proxy server to go around CSRP
-			$.ajaxPrefilter(function(options) {
-				if (options.crossdomain) {
-					options.url = 'proxy.php?url=' + encodeURIComponent(options.url);
-					//options.url = 'http://mirror.ikhoefgeen.nl/tresoar-proxy.php?url=' + encodeURIComponent(options.url);
-					options.crossdomain = false;
-				}
+				]
 			});
 
-			proj4.defs("EPSG:28992", "+proj=sterea +lat_0=52.15616055555555 +lon_0=5.38763888888889 +k=0.9999079 +x_0=155000 +y_0=463000  +ellps=bessel  +towgs84=565.040,49.910,465.840,-0.40939,0.35971,-1.86849,4.0772 +units=m +no_defs");
-		
-			var EPSG28992 = new ol.proj.Projection({
-				code: 'EPSG:28992'
-			});
-			
-			ol.proj.addProjection(EPSG28992);
-			
-			var projection = EPSG28992;
-			var projectionExtent = [-285401.92,22598.08,595401.9199999999,903401.9199999999];
-			var size = ol.extent.getWidth(projectionExtent) / 256;
-			var resolutions = [3440.64, 1720.32, 860.16, 430.08, 215.04, 107.52, 53.76, 26.88, 13.44, 6.72, 3.36, 1.68, 0.84, 0.42, 0.21];
-			
-			// generate resolutions and matrixIds arrays for this WMTS
-			var matrixIds = resolutions.map(function(resolution, index) { return 'EPSG:28992:' + index; });
-			
-			window.config = {};
-
-			window.groups = [];
-
-			window.loaders = {};
-
-			$.getJSON('metadata/config.json')
-				.fail(function(error) {
-					alert('Config.json kon niet worden geladen');
+			viewer.addLayer(new ol.layer.Tile({
+				id: 'ACHTERGROND:BRT',
+				name: 'BRT',
+				extent: Viewer.EPSG28992.extent,
+				source: new ol.source.WMTS({
+					url: 'http://geodata.nationaalgeoregister.nl/tiles/service/wmts/brtachtergrondkaart',
+					layer: 'brtachtergrondkaart',
+					matrixSet: 'EPSG:28992',
+					format: 'image/png',
+					attributions: [new ol.Attribution({
+					html: 'Kaartgegevens: © <a href="http://www.cbs.nl">CBS</a>, <a href="http://www.kadaster.nl">Kadaster</a>, <a href="http://openstreetmap.org">OpenStreetMap Bijdragers</a><span class="printhide"> (<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>)' +
+					' Kaartviewer: <a href="http://rug.nl/geo">Geodienst RUG</a>'
+					})],
+					projection: Viewer.EPSG28992,
+					tileGrid: Viewer.EPSG28992.tileGrid
 				})
-				.done(function(config) {
-					window.config = config;
+			}));
 
-					// Fetch new layers from all sources
-					config.sources.forEach(function(source) {
-						window.loaders[source.type](source.url);
-					});
+			viewer.addLayer(new ol.layer.Tile({
+				id: 'ACHTERGROND:OPENTOPO',
+				name: 'OpenTopo',
+				extent: Viewer.EPSG28992.extent,
+				source: new ol.source.TileArcGISRest({
+					url: 'https://services.arcgisonline.nl/arcgis/rest/services/Basiskaarten/Open_Topo/MapServer',
+					layer: 'Basiskaarten_Open_Topo',
+					matrixSet: 'EPSG:28992',
+					format: 'image/png',
+					attributions: [new ol.Attribution({
+					html: 'Kaartbeeld: © <a href="http://www.imergis.nl/">Jan-Willem van Aalst</a> ' +
+						  'Webservice: <a href="http://esri.nl/">Esri Nederland</a>'
+					})],
+					projection: Viewer.EPSG28992,
+					tileGrid: Viewer.EPSG28992.tileGrid
+				})
+			}));
 
-					// Update the layer group definitions
-					window.groups = config.groups.map(function(group) {
-						return {
-							name: group.name,
-							pattern: new RegExp(group.pattern)
-						};
-					});
-
-					scheduleUpdateLayerList();
-				});
-
-
-			// FIXME it would be more awesome if we could retrieve this list (excl the base layers)
-			// from Geoserver directly (through GetCapabilities?)
-			
-			// Could we then also access the extents of each layer? Then we can filter the list by
-			// intersecting those with the current view extents.
-			window.layers = {
-				'ACHTERGROND:BRT': new ol.layer.Tile({
-					id: 'ACHTERGROND:BRT',
-					name: 'BRT',
-					extent: projectionExtent,
-					source: new ol.source.WMTS({
-						url: 'http://geodata.nationaalgeoregister.nl/tiles/service/wmts/brtachtergrondkaart',
-						layer: 'brtachtergrondkaart',
-						matrixSet: 'EPSG:28992',
-						format: 'image/png',
-						attributions: [new ol.Attribution({
-						html: 'Kaartgegevens: © <a href="http://www.cbs.nl">CBS</a>, <a href="http://www.kadaster.nl">Kadaster</a>, <a href="http://openstreetmap.org">OpenStreetMap Bijdragers</a><span class="printhide"> (<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>)' +
-						' Kaartviewer: <a href="http://rug.nl/geo">Geodienst RUG</a>'
-						})],
-						projection: projection,
-						tileGrid: new ol.tilegrid.WMTS({
-							origin: ol.extent.getTopLeft(projectionExtent),
-							resolutions: resolutions,
-							matrixIds: matrixIds
+			viewer.addLayer(new ol.layer.Tile({
+				id: 'ACHTERGROND:LUFO',
+				name: 'Luchtfoto\'s',
+				extent: Viewer.EPSG28992.extent,
+				source: new ol.source.WMTS({
+					url: 'http://geodata1.nationaalgeoregister.nl/luchtfoto/wmts',
+					service: 'WMTS',
+					version: "1.0.0",
+					layer: 'luchtfoto',
+					matrixSet: 'nltilingschema',
+					format: 'image/jpeg',
+					style: '',
+					attributions: [new ol.Attribution({
+					html: 'Luchtfoto: <a href="https://www.pdok.nl/nl/copyright/luchtfotos/" target="_blank">© PDOK CC-BY-NC</a>'+
+					' Kaartviewer: <a href="http://rug.nl/geo">Geodienst RUG</a>'
+					})],
+					projection: Viewer.EPSG28992,
+					visibility: true,
+					zoomOffset: 2,
+					tileGrid: new ol.tilegrid.WMTS({
+						origin: ol.extent.getTopLeft(Viewer.EPSG28992.extent),
+						resolutions: Viewer.EPSG28992.resolutions,
+						matrixIds: Viewer.EPSG28992.resolutions.map(function(resolution, index) {
+							return 'EPSG:28992:' + (index < 10 ? "0" + index : index);
 						})
 					})
-				}),
+				})
+			}));
 
-				'ACHTERGROND:OPENTOPO': new ol.layer.Tile({
-					id: 'ACHTERGROND:OPENTOPO',
-					name: 'OpenTopo',
-					extent: projectionExtent,
-					source: new ol.source.TileArcGISRest({
-						url: 'https://services.arcgisonline.nl/arcgis/rest/services/Basiskaarten/Open_Topo/MapServer',
-						layer: 'Basiskaarten_Open_Topo',
-						matrixSet: 'EPSG:28992',
-						format: 'image/png',
-						attributions: [new ol.Attribution({
-						html: 'Kaartbeeld: © <a href="http://www.imergis.nl/">Jan-Willem van Aalst</a> ' +
-							  'Webservice: <a href="http://esri.nl/">Esri Nederland</a>'
-						})],
-						projection: projection,
-						tileGrid: new ol.tilegrid.WMTS({
-							origin: ol.extent.getTopLeft(projectionExtent),
-							resolutions: resolutions,
-							matrixIds: matrixIds
-						})
-					})
-				}),
-
-				'ACHTERGROND:LUFO': new ol.layer.Tile({
-					id: 'ACHTERGROND:LUFO',
-					name: 'Luchtfoto\'s',
-					extent: projectionExtent,
-					source: new ol.source.WMTS({
-						url: 'http://geodata1.nationaalgeoregister.nl/luchtfoto/wmts',
-						service: 'WMTS',
-						version: "1.0.0",
-						layer: 'luchtfoto',
-						matrixSet: 'nltilingschema',
-						format: 'image/jpeg',
-						style: '',
-						attributions: [new ol.Attribution({
-						html: 'Luchtfoto: <a href="https://www.pdok.nl/nl/copyright/luchtfotos/" target="_blank">© PDOK CC-BY-NC</a>'+
-						' Kaartviewer: <a href="http://rug.nl/geo">Geodienst RUG</a>'
-						})],
-						projection: projection,
-						visibility: true,
-						zoomOffset: 2,
-						tileGrid: new ol.tilegrid.WMTS({
-							origin: ol.extent.getTopLeft(projectionExtent),
-							resolutions: resolutions,
-							matrixIds: matrixIds.map(function(n) { return n < 10 ? "0" + n : n; })
-						})
-					})
-				}),
-
-				'cite:TEST_1622_1749': new ol.layer.Vector({
-					id: 'cite:TEST_1622_1749',
-					name: 'Huisnamen',
-					extent: [162260.09673250082, 541812.210502058,
-						197949.28417707223, 592629.1556384563],
-					source: new ol.source.Cluster({
-						distance: 40,
-						source: new ol.source.Vector({
-							loader: function(extent, resolution, projection) {
-								$.ajax('http://geoserver.geodienst.dev/ows', {
-									type: 'GET',
-									crossdomain: true,
-									data: {
-										service: 'WFS',
-										version: '1.0.0',
-										request: 'GetFeature',
-										typename: 'cite:TEST_1622_1749',
-										srsname: 'EPSG:28992', // todo: get this info from $feature?
-										bbox: extent.join(',')
-									}
-								}).done(function(data) {
-									var format = new ol.format.GML2();
-									this.addFeatures(format.readFeatures(data));
-								}.bind(this));
-							},
-							strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({
-								maxZoom: 19
-							})),
-							projection: 'EPSG:28992'
-						}),
-					}),
-					style: function(feature) {
-						var size = feature.get('features').length;
-						return new ol.style.Style({
-							image: new ol.style.Circle({
-								radius: 10,
-								stroke: new ol.style.Stroke({
-									color: '#fff'
-								}),
-								fill: new ol.style.Fill({
-									color: '#3399CC'
-								})
-							}),
-							text: new ol.style.Text({
-								text: size.toString(),
-								fill: new ol.style.Fill({
-									color: '#fff'
-								})
-							})
-						});
-					}
-				}),
-
-				'PGR:CHK2_StinzenStates': new ol.layer.Vector({
-					id: 'PGR:CHK2_StinzenStates',
-					name: 'Stinzen en States',
-					bbox: new ol.Feature({
-						geometry: new ol.geom.Polygon([[
-							[148209.8999999985, 538183.3000000007],
-							[213013.49130000174, 538183.3000000007],
-							[213013.49130000174, 606238.3000000007],
-							[148209.8999999985, 606238.3000000007]
-						]], 'XY')
-					}),
-					extent: [
-						148209.8999999985, 538183.3000000007,
-						213013.49130000174, 606238.3000000007],
+			viewer.addLayer(new ol.layer.Vector({
+				id: 'cite:TEST_1622_1749',
+				name: 'Huisnamen',
+				extent: [162260.09673250082, 541812.210502058,
+					197949.28417707223, 592629.1556384563],
+				source: new ol.source.Cluster({
+					distance: 40,
 					source: new ol.source.Vector({
 						loader: function(extent, resolution, projection) {
-							$.ajax('http://geoportaal.fryslan.nl/arcgis/services/ProvinciaalGeoRegister/PGR_features/GeoDataServer/WFSServer', {
+							$.ajax('http://geoserver.geodienst.dev/ows', {
 								type: 'GET',
 								crossdomain: true,
 								data: {
 									service: 'WFS',
 									version: '1.0.0',
 									request: 'GetFeature',
-									typename: 'PGR:CHK2_StinzenStates',
+									typename: 'cite:TEST_1622_1749',
 									srsname: 'EPSG:28992', // todo: get this info from $feature?
 									bbox: extent.join(',')
 								}
@@ -343,571 +294,55 @@
 						})),
 						projection: 'EPSG:28992'
 					}),
-					style: (function() {
-						var colors = {
-							'Boerderij, State/Buitenplaats': [88, 35, 223, 0.8],
-							'Buitenplaats': [30, 149, 240, 0.8],
-							'Stins': [200, 99, 187, 0.8],
-							'Stins, Boerderij': [27, 224, 142, 0.8],
-							'Stins, Boerderij, State/Buitenplaats': [215, 118, 116, 0.8],
-							'Stins, State/Buitenplaats': [227, 201, 27, 0.8],
-							'': [141, 202, 117, 0.8]
-						};
-
-						// Make styles from the colors and store them
-						// in an object, with the TYPE value as key.
-						var styles = $.map(colors, function(value, key) {
-							return {
-								key: key,
-								value: new ol.style.Style({
-									stroke: new ol.style.Stroke({
-										color: 'black',
-										width: 0.8
-									}),
-									fill: new ol.style.Fill({
-										color: value
-									})
-								})
-							};
-						}).reduce(function(result, pair) {
-							result[pair.key] = pair.value;
-							return result;
-						}, {});
-
-						// The real 'style' feature is now nothing more than a
-						// lookup feature. Such speed, much quickness.
-						return function(feature) {
-							return styles[feature.get('TYPE')];
-						};
-					})()
-				})
-
-				/*
-				test2: new ol.layer.Tile({
-					id: 'test2',
-					name: 'MapServer test',
-					source: new ol.source.TileArcGISRest({
-						url: 'http://geoportaal.fryslan.nl/arcgis/rest/services/ProvinciaalGeoRegister/PGR/MapServer',
-						params: {
-							layers: 'show:85'
-						}
-						// todo: when clicking query /identify?
-					})
-				})
-				*/
-			};
-
-			var map = new ol.Map({
-				maxExtent: projectionExtent,
-				layers: [],
-				target: $('#map').get(0),
-				maxResolution: 860.16,
-				numZoomLevels: 12,
-				units: 'm',
-				theme: null,
-				displayProjection: EPSG28992,
-				view: new ol.View({
-					projection: EPSG28992,
-					center: [194898.97512816024, 572819.4255151745], // Center on Fryslân!
-					maxZoom: 19,
-					minZoom: 8,
-					zoom: 10.5
-				})
-			});
-
-
-			function updateLayerZOrder() {
-				var $layers = $('#active-layers').find('.layer');
-				$layers
-					.map(function() { return $(this).prop('data-layer-id'); })
-					.each(function(i) { window.layers[this].setZIndex($layers.length - 1 - i); });
-			}
-
-			// Render the list of layers (using Transparency.js templating)
-			function updateLayerList() {
-				var activeLayerIds = map.getLayers().getArray().map(function(layer) {
-					return layer.get('id'); });
-
-				// Hide all tooltips before refreshing the list because sometimes the element
-				// a tooltip was connected to is removed, and then there is no onmouseout-event
-				// left to hide the tooltip :(
-				$('#layers [data-toggle="tooltip"]').tooltip('hide');
-
-				$('#active-layers').render(
-					$.makeArray(map.getLayers().getArray())
-					// Extract all the attributes we want to render from the layers
-					.map(function(layer) {
-						return {
-							layer: {
-								'id': layer.get('id'),
-								'z-index': layer.getZIndex(),
-								'layer-name': layer.get('name'),
-								'opacity': layer.getOpacity() * 100
-							}
-						};
-					})
-					// Sort the layers by their z-index
-					.sort(function(a, b) {
-						return b['layer']['z-index'] - a['layer']['z-index'];
-					}),
-					{ // directives on how to render this stuff
-						'layer': {
-							'data-layer-id': function() {
-								return this.layer.id;
-							},
-						},
-						'remove-layer-button': {
-							'data-tooltip': function() {
-								return 'Verplaats ' + this.layer.id + ' terug naar \'Beschikbare kaarten\'';
-							}
-						}
-					}
-				);
-
-				// Layers are rendered with the top-most in the list as the top-most in the view
-				// (Transpacenry template rendering does not take order into account, probably
-				// because sortable() screws up some internal model of the siblings.)
-				$('#active-layers .layer')
-					.sort(function(a, b) {
-						return layers[$(b).attr('data-layer-id')].getZIndex()
-							 - layers[$(a).attr('data-layer-id')].getZIndex(); 
-					})
-					.detach()
-					.appendTo('#active-layers');
-
-				var visibleExtent = map.getView().calculateExtent(map.getSize());
-
-				var query = $('#layer-filter-query').val().toLowerCase();
-
-				function getSurface(extent) {
-					var size = ol.extent.getSize(extent);
-					return size[0] * size[1];
-				}
-
-				// Turn the list of layers into a selection of info about the raster layers, to be rendered in the list.
-				var rasterLayers = $.map(layers, function(layer) {
-					// If the layer is already on the map, hide it in the available list
-					if (activeLayerIds.indexOf(layer.get('id')) >= 0)
-						return null;
-
-					switch (layer.constructor) {
-						case ol.layer.Tile:
-							var type = 'raster';
-							break;
-						case ol.layer.Vector:
-							var type = 'vector';
-							break;
-						default:
-							var type = 'undefined';
-							break;
-					}
-
-					var score = 0;
-
-					if (query != '') {
-						score = layer.get('name').score(query, 0.3);
-
-						// If the score is pretty low, don't even show it at all
-						if (score < 0.1)
-							return null;
-					} else if (layer.getExtent()) {
-						var visibleMapExtent = ol.extent.getIntersection(layer.getExtent(), visibleExtent);
-
-						// Only show layers that are inside the view
-						if (ol.extent.isEmpty(visibleMapExtent))
-							return null;
-						
-						// Visibility: How much of the map would be visible in the current view
-						var visibility = getSurface(visibleMapExtent) / getSurface(layer.getExtent());
-
-						// Coverage: How much of the current view would be filled in by the map
-						var coverage = getSurface(visibleMapExtent) / getSurface(visibleExtent);
-						
-						score = 2 * visibility + coverage;
-					}
-					
-					return {
-						'id': layer.get('id'),
-						'name': layer.get('name'),
-						'thumbnail': layer.get('thumbnail'),
-						'type': type,
-						'score': score
-					};
-				});
-
-				// sort layers in size (smaller on top)
-				rasterLayers = rasterLayers.sort(function(a, b) {
-					if (a.score != b.score)
-							return b.score - a.score;
-						else
-							return a.name.localeCompare(b.name);
-				});
-
-				// group layers by group as defined by window.groups (or groups.json indirectly)
-				rasterLayers = rasterLayers.reduce(function(prev, current) {
-					// Find the right group
-					var group = groups.find(function(group) {
-						return group.pattern.test(current.id);
-					});
-
-					// No group? Skip map completely right now
-					if (!group)
-						return prev;
-
-					// Otherwise add map to the combined groups element
-					if (!(group.name in prev))
-						prev[group.name] = {
-							name: group.name,
-							layers: [current]
-						};
-					else
-						prev[group.name].layers.push(current);
-
-					return prev;
-				}, {});
-
-				// turn the object (map-like structure) back to an array of values (groups)
-				rasterLayers = $.map(rasterLayers, function(layer) {
-					return layer;
-				});
-
-				// sort the groups again using the order defined in the config
-				rasterLayers = rasterLayers.sort(function(a, b) {
-					var ai, bi;
-					
-					for (var i = 0; i < window.groups.length; ++i) {
-						if (window.groups[i].name == a.name)
-							ai = i;
-						if (window.groups[i].name == b.name)
-							bi = i;
-					}
-
-					return ai - bi;
-				});
-
-				ReactDOM.render(
-					React.createElement(Viewer.LayerList, {groups: rasterLayers}),
-					document.getElementById('available-layers'));
-			}
-
-			// Enable Bootstrap tooltips in the dynamic #layers list
-			$('#layers').tooltip({
-				container: 'body',
-				selector: '[data-toggle="tooltip"]',
-				delay: {
-					show: 500,
-					hide: 0
-				},
-				title: function() {
-					return $(this).attr('data-tooltip') || $(this).attr('title');
-				}
-			});
-
-			var adjustment;
-
-			// Using https://johnny.github.io/jquery-sortable/ to make the active layer list orderable
-			$('#active-layers').sortable({
-				group: 'layers',
-
-				// set $item relative to cursor position
-				onDragStart: function ($item, container, _super) {
-					var pointer = container.rootGroup.pointer;
-
-					adjustment = {
-						left: pointer.left,
-						top: pointer.top
-					};
-
-					_super($item, container);
-				},
-				onDrag: function ($item, position) {
-					$item.css({
-						left: position.left - adjustment.left,
-						top: position.top - adjustment.top
-					});
-				},
-				onDrop: function($item, container, _super) {
-					updateLayerZOrder();
-					_super($item, container);
-				},
-				serialize: function (parent, children, isContainer) {
-					return isContainer ? children.join() : parent.attr('data-layer-id');
-				},
-			});
-
-			// Scheduling and triggering layer list updates. Please use schedule
-			// as much as possible for example while panning the map or typing in
-			// the search field. It will delay the actual update while the user
-			// is still entering new data. triggerUpdateLayerList will clear the
-			// scheduled update and run immediately. use this instead of 
-			// updateLayerList directly to prevent updating the list, and then
-			// update the list again when the scheduled update is fired.
-
-			var layerListTimeout;
-
-			function scheduleUpdateLayerList() {
-				clearTimeout(layerListTimeout);
-				layerListTimeout = setTimeout(triggerUpdateLayerList, 500);
-			}
-
-			function triggerUpdateLayerList() {
-				clearTimeout(layerListTimeout);
-				updateLayerList();
-			}
-
-			// Update the layer list now
-			triggerUpdateLayerList();
-
-			// Update the layer list every time a layer is enabled or disabled
-			map.getLayers().on('add', triggerUpdateLayerList);
-			
-			map.getLayers().on('remove', triggerUpdateLayerList);
-
-			var featureOverlay = new ol.layer.Vector({
-				map: map,
-				source: new ol.source.Vector({
-					features: new ol.Collection(),
-					useSpatialIndex: false
 				}),
-				style: new ol.style.Style({
-					stroke: new ol.style.Stroke({
-						color: 'red',
-						width: 2
-					})
-				}),
-				updateWhileAnimating: true,
-				updateWhileInteracting: true
-			});
-
-			// Make layer interactive
-
-			$('#layers').on('click', '.add-layer-button', function(e) {
-				var layerId = $(this).attr('data-layer-id');
-				var layer = window.layers[layerId];
-				// Remove the bounding box overlay if that is still shown
-				if (layer.get('bbox'))
-					featureOverlay.getSource().removeFeature(layer.get('bbox'));
-
-				// Move the layer to the top
-				layer.setZIndex(map.getLayers().getArray().length);
-				
-				// Add the layer to the map
-				map.addLayer(layer);
-			});
-
-			$('#layers').on('click', '.remove-layer-button', function(e) {
-				var layerId = $(this).closest('.layer').attr('data-layer-id');
-				var layer = window.layers[layerId];
-				if (layer.get('bbox'))
-					featureOverlay.getSource().removeFeature(layer.get('bbox'));
-				map.removeLayer(layer);
-			});
-
-			$('#layers').on('change', '.layer input[name=opacity]', function(e) {
-				var layerId = $(this).closest('.layer').attr('data-layer-id');
-				window.layers[layerId].setOpacity(this.value / 100);
-			});
-
-			$('#layers').on('mouseover', '.layer', function(e) {
-				var layerId = $(this).attr('data-layer-id');
-				var layer = window.layers[layerId];
-				if (layer.get('bbox')) {
-					featureOverlay.getSource().addFeature(layer.get('bbox'));
-				}
-			});
-
-			// FIXME the outline will not disappear when the layer suddenly is removed from
-			// the list e.g. when the layer is added to the active list.
-			$('#layers').on('mouseout', '.layer', function(e) {
-				var layerId = $(this).attr('data-layer-id');
-				var layer = window.layers[layerId];
-				if (layer.get('bbox') !== undefined && featureOverlay.getSource().getFeatures().indexOf(layer.get('bbox')) !== -1) {
-					featureOverlay.getSource().removeFeature(layer.get('bbox'));
-				}
-			});
-
-			var groupCollapsed = {};
-
-			// Layer group collapsing
-			$('#layers').on('click', '.group-toggle', function(e) {
-				var groupEl = $(this).closest('[data-group-id]');
-				var groupId = groupEl.attr('data-group-id');
-				var visible = !groupCollapsed[groupId];
-
-				groupEl.attr('data-collapsed', visible ? 'collapsed' : '');
-				groupCollapsed[groupId] = visible;
-			});
-
-			// Layer searching
-			$('#layer-filter-query').on('keyup', scheduleUpdateLayerList);
-
-			$('#layers .layer-filter .search-button').on('click', triggerUpdateLayerList);
-
-			$('#layers .layer-filter .clear-button').on('click', function() {
-				$('#layer-filter-query').val('');
-				triggerUpdateLayerList();
-			});
-
-			// Feature popup
-			var popup = new ol.Overlay({
-				element: $('#feature-popup').detach().get(0),
-				positioning: 'center-left',
-				stopEvent: true
-			});
-
-			map.addOverlay(popup);
-
-			jQuery.fn.atPoint = function(point) {
-				return $(this).filter(function() {
-					var offset = $(this).offset(),
-						width = $(this).width(),
-						height = $(this).height();
-
-					return offset.top <= point.y && offset.top + height >= point.y
-						&& offset.left <= point.x && offset.left + width >= point.x;
-				});
-			}
-
-			function featureLabel(feature) {
-				var props = feature.getProperties();
-				var options = ['naam', 'name'];
-				for (var i = 0; i < options.length; ++i) {
-					if (options[i] in props) {
-						return props[options[i]];
-					}
-				}
-
-				return null;
-			}
-
-			function showFeaturePopup(feature, evt) {
-				$(popup.getElement()).render({
-					'popover-title': featureLabel(feature),
-					'feature-property-table':
-						$.map(feature.getProperties(), function(v, k) {
-							return { 'key': k, 'value': v };
-						}).filter(function(pair) {
-							return !/^(OBJECTID$|GLOBALID$|SHAPE$|SHAPE_)/.test(pair.key);
+				style: function(feature) {
+					var size = feature.get('features').length;
+					return new ol.style.Style({
+						image: new ol.style.Circle({
+							radius: 10,
+							stroke: new ol.style.Stroke({
+								color: '#fff'
+							}),
+							fill: new ol.style.Fill({
+								color: '#3399CC'
+							})
+						}),
+						text: new ol.style.Text({
+							text: size.toString(),
+							fill: new ol.style.Fill({
+								color: '#fff'
+							})
 						})
-				}).show();
-				popup.setPosition(evt.coordinate);
-			}
-
-			function hideFeaturePopup() {
-				$(popup.getElement()).hide();
-			}
-
-			$(popup.getElement()).find('.close').on('click', function(e) {
-				e.preventDefault();
-				hideFeaturePopup();
-			});
-
-			var featureSelectionMenu = new ol.Overlay({
-				element: $('#feature-selection-menu').detach().get(0),
-				positioning: 'center-left',
-				stopEvent: true
-			});
-
-			map.addOverlay(featureSelectionMenu);
-
-			function showFeatureSelector(features, evt) {
-				$(featureSelectionMenu.getElement())
-					.empty()
-					.append(
-						$.map(features, function(feature) {
-							return $('<li>').append($('<a>').attr('href', '#').data('feature', feature).text(featureLabel(feature) || '[Geen label]'));
-						}))
-					.show();
-				featureSelectionMenu.setPosition(evt.coordinate);
-			}
-
-			function hideFeatureSelector() {
-				$(featureSelectionMenu.getElement()).hide();
-			}
-
-			// Hide the featureSelectionMenu when we click outside it
-			$(document.body).on('mousedown', function(e) {
-				if (!$.contains(featureSelectionMenu.getElement(), e.target)) {
-					hideFeatureSelector();
+					});
 				}
-			});
+			}));
 
-			var hoverStyle = new ol.style.Style({
-				stroke: new ol.style.Stroke({
-					color: 'red',
-					width: 2
+			viewer.addLayer(new ol.layer.Vector({
+				id: 'PGR:CHK2_StinzenStates',
+				name: 'Stinzen en States',
+				bbox: new ol.Feature({
+					geometry: new ol.geom.Polygon([[
+						[148209.8999999985, 538183.3000000007],
+						[213013.49130000174, 538183.3000000007],
+						[213013.49130000174, 606238.3000000007],
+						[148209.8999999985, 606238.3000000007]
+					]], 'XY')
 				}),
-				fill: new ol.style.Fill({
-					color: [0, 0, 255, 0.6]
-				})
-			});
-
-			// When we hover over a menu item in the feature selector, highlight that feature!
-			$('#feature-selection-menu')
-				.on('mouseover', 'a', function(e) {
-					var feature = $(this).data('feature');
-					feature.setStyle(hoverStyle);
-				})
-				.on('mouseout', 'a', function(e) {
-					var feature = $(this).data('feature');
-					feature.setStyle(null);
-				})
-				.on('click', 'a', function(e) {
-					e.preventDefault();
-					var feature = $(this).data('feature');
-					hideFeatureSelector();
-					showFeaturePopup(feature, {coordinate: featureSelectionMenu.getPosition()});
-				});
-
-
-
-			map.on('click', function(evt) {
-				// If we click inside the feature popup, don't do anything special with the map.
-				// if ($(popup.getElement()).atPoint({x: evt.originalEvent.pageX, y: evt.originalEvent.pageY}).size() > 0)
-				// 	return;
-				
-				var features = [];
-
-				map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
-					features.push(feature);
-				});
-
-				if (features.length === 1)
-					showFeaturePopup(features[0], evt);
-				else if (features.length > 1) {
-					hideFeaturePopup();
-					showFeatureSelector(features, evt);
-				}
-			});
-
-			// Make the cursor a pointer for anything clickable
-			map.on('pointermove', function(e) {
-				var pixel = map.getEventPixel(e.originalEvent);
-				var hit = map.hasFeatureAtPixel(pixel);
-				map.getTarget().style.cursor = hit ? 'pointer' : '';
-			});
-
-			// Update the layer list when panning
-			map.getView().on('change:center', scheduleUpdateLayerList);
-
-			// map.getView().on('change:resolution', function() {
-			// 	console.log(this.getResolution());
-			// });
-
-			// Map extents for discoverability
-			/*
-			var extendsOverlay = new ol.layer.Vector({
-				map: map,
+				extent: [
+					148209.8999999985, 538183.3000000007,
+					213013.49130000174, 606238.3000000007],
 				source: new ol.source.Vector({
 					loader: function(extent, resolution, projection) {
-						$.ajax('http://localhost:8080/geoserver/ows', {
+						$.ajax('http://geoportaal.fryslan.nl/arcgis/services/ProvinciaalGeoRegister/PGR_features/GeoDataServer/WFSServer', {
 							type: 'GET',
 							crossdomain: true,
 							data: {
 								service: 'WFS',
 								version: '1.0.0',
 								request: 'GetFeature',
-								typename: 'tresoar:extents'
+								typename: 'PGR:CHK2_StinzenStates',
+								srsname: 'EPSG:28992', // todo: get this info from $feature?
+								bbox: extent.join(',')
 							}
 						}).done(function(data) {
 							var format = new ol.format.GML2();
@@ -919,46 +354,47 @@
 					})),
 					projection: 'EPSG:28992'
 				}),
-				style: new ol.style.Style({
-					stroke: new ol.style.Stroke({
-						color: 'red',
-						width: 2
-					})
-				})
-			});
-			*/
+				style: (function() {
+					var colors = {
+						'Boerderij, State/Buitenplaats': [88, 35, 223, 0.8],
+						'Buitenplaats': [30, 149, 240, 0.8],
+						'Stins': [200, 99, 187, 0.8],
+						'Stins, Boerderij': [27, 224, 142, 0.8],
+						'Stins, Boerderij, State/Buitenplaats': [215, 118, 116, 0.8],
+						'Stins, State/Buitenplaats': [227, 201, 27, 0.8],
+						'': [141, 202, 117, 0.8]
+					};
+
+					// Make styles from the colors and store them
+					// in an object, with the TYPE value as key.
+					var styles = $.map(colors, function(value, key) {
+						return {
+							key: key,
+							value: new ol.style.Style({
+								stroke: new ol.style.Stroke({
+									color: 'black',
+									width: 0.8
+								}),
+								fill: new ol.style.Fill({
+									color: value
+								})
+							})
+						};
+					}).reduce(function(result, pair) {
+						result[pair.key] = pair.value;
+						return result;
+					}, {});
+
+					// The real 'style' feature is now nothing more than a
+					// lookup feature. Such speed, much quickness.
+					return function(feature) {
+						return styles[feature.get('TYPE')];
+					};
+				})()
+			}));
 
 			// Start with an Open Topo achtergrond kaart as layer
-			map.addLayer(window.layers['ACHTERGROND:OPENTOPO']);
-
-			var pos = null;
-			var width = 0;
-
-			function setLayerPanelWidth(width) {
-				width = Math.max(Math.min(width, 500), 100);
-				$('#layers').width(width)
-				$('#map').css('left', width);
-				map.updateSize();
-				localStorage['layerPanelWidth'] = width;
-			}
-			
-			$('#layers .resize-handle').on('mousedown', function(e) {
-				pos = e.clientX;
-				width = $('#layers').width();
-				e.preventDefault();
-			});
-			$(document.body).on('mouseup', function(e) {
-				if (pos !== null) {
-					pos = null;
-					e.preventDefault();
-				}
-			});
-			$(document.body).on('mousemove', function(e) {
-				if (pos !== null) {
-					setLayerPanelWidth(width + (e.clientX - pos));
-					e.preventDefault();
-				}
-			});
+			viewer.map.addLayer(viewer.layers['ACHTERGROND:OPENTOPO']);
 
 			$('#address-query').on('typeahead:select', function(e, address) {
 				switch (address.niveau) {
@@ -974,18 +410,12 @@
 						break;
 				}
 
-				map.getView().fit(
+				viewer.map.getView().fit(
 					new ol.geom.Point(address.pos.split(/\s/).map(parseFloat)),
-					map.getSize(),
+					viewer.map.getSize(),
 					{maxZoom: maxZoom});
 			});
-
-			if ('layerPanelWidth' in localStorage) {
-				setLayerPanelWidth(localStorage['layerPanelWidth']);
-			}
 		</script>
-		<script src="assets/js/tresoar-feature-layers.js"></script>
-		<script src="assets/js/tresoar-raster-layers.js"></script>
 		<script src="assets/js/pdok-geocoder.js"></script>
 	</body>
 </html>
