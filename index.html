@@ -596,7 +596,7 @@
 				selector: '[data-toggle="tooltip"]',
 				delay: {
 					show: 500,
-					hide: 250
+					hide: 0
 				},
 				title: function() {
 					return $(this).attr('data-tooltip') || $(this).attr('title');
@@ -633,20 +633,6 @@
 				serialize: function (parent, children, isContainer) {
 					return isContainer ? children.join() : parent.attr('data-layer-id');
 				},
-			});
-
-			// Also enable dragging layers from the available list to the enabled list
-			$('#available-layers').sortable({
-				group: 'layers',
-				drop: false,
-				nested: false,
-				handle: '.list-group-item',
-				containerSelector: '.list-group',
-				itemSelector: '.list-group-item',
-				onMouseDown: function ($item, _super, event) {
-					event.preventDefault()
-					return true;
-				}
 			});
 
 			// Scheduling and triggering layer list updates. Please use schedule
