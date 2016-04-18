@@ -258,7 +258,7 @@
 						origin: ol.extent.getTopLeft(Viewer.EPSG28992.extent),
 						resolutions: Viewer.EPSG28992.resolutions,
 						matrixIds: Viewer.EPSG28992.resolutions.map(function(resolution, index) {
-							return 'EPSG:28992:' + (index < 10 ? "0" + index : index);
+							return index < 10 ? "0" + index : index;
 						})
 					})
 				})
