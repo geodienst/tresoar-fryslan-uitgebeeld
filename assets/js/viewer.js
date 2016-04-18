@@ -247,7 +247,7 @@
 		$(viewer.featureSelectionMenu.getElement())
 			.on('mouseover', 'a', function(e) {
 				var feature = $(this).data('feature');
-				feature.feature.setStyle(hoverStyle);
+				feature.feature.setStyle(viewer.hoverStyle);
 			})
 			.on('mouseout', 'a', function(e) {
 				var feature = $(this).data('feature');
@@ -273,7 +273,13 @@
 			var features = [];
 
 			viewer.map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
-				if (layer)
+				if (!layer) return;
+
+				if ('features' in feature.getProperties())
+					feature.getProperties().features.map(function(feature) {
+						features.push({feature: feature, layer: layer});
+					});
+				else
 					features.push({feature: feature, layer: layer});
 			});
 
@@ -499,16 +505,32 @@
 		this.updateLayerList();
 	}
 
-	Viewer.prototype.getFeatureLabel = function(feature) {
-		var props = feature.getProperties();
-		var options = ['naam', 'name'];
-		for (var i = 0; i < options.length; ++i) {
-			if (options[i] in props) {
-				return props[options[i]];
+	Viewer.prototype.defaultFeatureFilter = {
+		header: function(feature) {
+			var props = feature.getProperties();
+			var options = ['naam', 'name'];
+			for (var i = 0; i < options.length; ++i) {
+				if (options[i] in props) {
+					return props[options[i]];
+				}
 			}
-		}
 
-		return null;
+			return null;
+		},
+		properties: function(feature) {
+			return $.Deferred().resolve(
+				$.map(feature.getProperties(), function(v, k) {
+					return {key: k, value: v};
+				}).toHTMLTable());
+		}
+	};
+
+	Viewer.prototype.getFeatureHeader = function(feature, layer) {
+		var featureFilter = this.config.properties.find(function(property_set) {
+			return new RegExp(property_set.pattern).test(layer.get('id'));
+		}) || this.defaultFeatureFilter;
+
+		return featureFilter.header(feature);
 	}
 
 	Viewer.prototype.showFeaturePopup = function(feature, evt) {
@@ -518,32 +540,26 @@
 		// Find a feature filter in the config				
 		var featureFilter = this.config.properties.find(function(property_set) {
 			return new RegExp(property_set.pattern).test(feature.layer.get('id'));
-		}) || "!/^(OBJECTID$|GLOBALID$|SHAPE$|SHAPE_)/";
+		}) || this.defaultFeatureFilter;
 
-		// Compile the feature filter as a callable function
-		if ($.isArray(featureFilter.properties)) {
-			featureFilter = (function(whitelist) {
-				return function(pair) {
-					return whitelist.indexOf(pair.key) !== -1;
-				};
-			})(featureFilter.properties);
-		} else if (typeof featureFilter.properties == "string") {
-			featureFilter = (function(regexp) {
-				return function(pair) {
-					return regexp.test(pair.key);
-				};
-			})(new RegExp(featureFilter.properties));
-		} else {
-			featureFilter = featureFilter.properties;
-		}
+		var $popup = $(this.popup.getElement());
+		$popup.addClass('ui-loading');
+		$popup.find('.popover-title').text(featureFilter.header(feature.feature));
+		
+		featureFilter.content(feature.feature)
+			.always(function() {
+				$popup.removeClass('ui-loading');
+				$popup.find('.popover-content').empty();
+			})
+			.done(function(content) {
+				$popup.find('.popover-content').append(content);
+			})
+			.fail(function() {
+				var $error = $('<p>').addClass('text-info').text('De extra informatie kon niet worden opgehaald.');
+				$popup.find('.popover-content').append($error);
+			});
 
-		$(this.popup.getElement()).render({
-			'popover-title': this.getFeatureLabel(feature.feature),
-			'feature-property-table':
-				$.map(feature.feature.getProperties(), function(v, k) {
-					return { 'key': k, 'value': v };
-				}).filter(featureFilter)
-		}).show();
+		$popup.show();
 		
 		this.popup.setPosition(evt.coordinate);
 	}
@@ -561,7 +577,7 @@
 						.append($('<a>')
 								.attr('href', '#')
 								.data('feature', feature)
-								.text(this.getFeatureLabel(feature.feature) || '[Geen label]'));
+								.text(this.getFeatureHeader(feature.feature, feature.layer) || '[Geen label]'));
 				}).bind(this)))
 			.show();
 		this.featureSelectionMenu.setPosition(evt.coordinate);

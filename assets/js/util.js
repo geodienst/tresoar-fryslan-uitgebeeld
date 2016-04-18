@@ -28,3 +28,16 @@ jQuery.fn.atPoint = function(point) {
 			&& offset.left <= point.x && offset.left + width >= point.x;
 	});
 };
+
+Array.prototype.toHTMLTable = function() {
+	var $table = $('<table>'),
+		$tbody = $('<tbody>').appendTo($table);
+
+	this.forEach(function(pair) {
+		var $tr = $('<tr>').appendTo($tbody);
+		$('<th>').text(pair.key).appendTo($tr);
+		$('<td>').text(pair.value).appendTo($tr);
+	});
+
+	return $table;
+}

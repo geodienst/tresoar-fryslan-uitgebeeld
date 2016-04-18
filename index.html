@@ -33,16 +33,7 @@
 				<span aria-hidden="true">&times;</span>
 			</button>
 			<h3 class="popover-title"></h3>
-			<div class="popover-content">
-				<table>
-					<tbody class="feature-property-table">
-						<tr>
-							<th class="key"></th>
-							<td class="value"></td>
-						</tr>
-					</tbody>
-				</table>
-			</div>
+			<div class="popover-content"></div>
 		</div>
 
 		<div id="feature-selection-menu" class="dropdown-menu">
@@ -162,38 +153,59 @@
 				],
 				properties: [
 					{
-						"pattern": /^PGR:CHK2_StinzenStates$/,
-						"properties": function(pair) {
-							return [
-								"OBJECTID",
-								"UNI_NAAM",
-								"BUI_NAAM",
-								"STI_PLAATS",
-								"BP_NAAM",
-								"SIF_NAAM",
-								"PNN_NAAM",
-								"OPM_NAAM",
-								"OPM_CONTOU",
-								"OPM_BEBOUW",
-								"JR_NOOMEN",
-								"JR_SIF",
-								"JR_ANDERS",
-								"OPM_JAAR",
-								"OPM_ALGEME",
-								"HERKOMST_1",
-								"BEHEERDER",
-								"BRONHOUDER",
-								"TYPE",
-								"GLOBALID",
-								"SHAPE_Leng",
-								"SHAPE_Area"
-							].indexOf(pair.key) === -1;
+						pattern: /^PGR:CHK2_StinzenStates$/,
+						header: function(feature) {
+							return feature.get('STI_NAAM');
+						},
+						content: function(feature) {
+							return jQuery.Deferred().resolve($.map(feature.getProperties(), function(v, k) {
+								if ([
+									"OBJECTID",
+									"UNI_NAAM",
+									"BUI_NAAM",
+									"STI_PLAATS",
+									"BP_NAAM",
+									"SIF_NAAM",
+									"PNN_NAAM",
+									"OPM_NAAM",
+									"OPM_CONTOU",
+									"OPM_BEBOUW",
+									"JR_NOOMEN",
+									"JR_SIF",
+									"JR_ANDERS",
+									"OPM_JAAR",
+									"OPM_ALGEME",
+									"HERKOMST_1",
+									"BEHEERDER",
+									"BRONHOUDER",
+									"TYPE",
+									"GLOBALID",
+									"SHAPE_Leng",
+									"SHAPE_Area"
+								].indexOf(k) !== -1)
+									return null;
+
+								return {key: k, value: v};
+							}).toHTMLTable());
 						}
 					},
 					{
-						"pattern": /.*/,
-						"properties": function(pair) {
-							return true;
+						pattern: /^cite:TEST_1622_1749$/,
+						header: function(feature) {
+							return feature.get('txt');
+						},
+						content: function(feature) {
+							return $.ajax({
+								url: 'metadata/' + feature.get('txt') + '.txt',
+								beforeSend: function(xhr) {
+									xhr.overrideMimeType('text/plain; charset=Windows-1250');
+								}
+							})
+							.then(function(text) {
+								return text.split(/\r?\n\r?\n/).map(function(paragraph) {
+									return $('<p>').text(paragraph.trim());
+								});
+							});
 						}
 					}
 				]
@@ -295,17 +307,15 @@
 						projection: 'EPSG:28992'
 					}),
 				}),
-				style: function(feature) {
+				style: function(feature, resolution) {
 					var size = feature.get('features').length;
 					return new ol.style.Style({
-						image: new ol.style.Circle({
-							radius: 10,
-							stroke: new ol.style.Stroke({
-								color: '#fff'
-							}),
-							fill: new ol.style.Fill({
-								color: '#3399CC'
-							})
+						geometry: new ol.geom.Circle(feature.getGeometry().getCoordinates(), resolution * 10),
+						stroke: new ol.style.Stroke({
+							color: '#fff'
+						}),
+						fill: new ol.style.Fill({
+							color: '#3399CC'
 						}),
 						text: new ol.style.Text({
 							text: size.toString(),
@@ -395,6 +405,8 @@
 
 			// Start with an Open Topo achtergrond kaart as layer
 			viewer.map.addLayer(viewer.layers['ACHTERGROND:OPENTOPO']);
+
+			viewer.map.addLayer(viewer.layers['cite:TEST_1622_1749']);
 
 			$('#address-query').on('typeahead:select', function(e, address) {
 				switch (address.niveau) {
