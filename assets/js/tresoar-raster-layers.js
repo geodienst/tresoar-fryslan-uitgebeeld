@@ -34,7 +34,8 @@ Viewer.loaders.WMS = function(url, viewer) {
 					[$bbox.getAttribute('minx'), $bbox.getAttribute('miny')].map(parseFloat),
 					[$bbox.getAttribute('maxx'), $bbox.getAttribute('miny')].map(parseFloat),
 					[$bbox.getAttribute('maxx'), $bbox.getAttribute('maxy')].map(parseFloat),
-					[$bbox.getAttribute('minx'), $bbox.getAttribute('maxy')].map(parseFloat)
+					[$bbox.getAttribute('minx'), $bbox.getAttribute('maxy')].map(parseFloat),
+					[$bbox.getAttribute('minx'), $bbox.getAttribute('miny')].map(parseFloat)
 				]], 'XY')
 			}) : null;
 
