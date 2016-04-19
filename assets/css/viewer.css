@@ -54,6 +54,12 @@ html, body {
     border-bottom: 1px solid #ccc;
 }
 
+#layers h4 .layer-group-count.badge {
+    margin-left: 4px;
+    margin-top: -2px;
+    background-color: #999;
+}
+
 #layers .layer-group[data-collapsed=collapsed] .layers {
     display: none;
 }
