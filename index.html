@@ -109,7 +109,8 @@
 					{
 						"omschrijving": "Alle gegeorefereerde kaarten",
 						"type": "WMS",
-						"url": "http://geoserver.geodienst.dev/ows"
+						// "url": "http://geoserver.geodienst.dev/ows"
+						"url": "https://geoserver.fryslanuitgebeeld.frl/ows"
 					},
 					{
 						"omschrijving": "Bonnebladen",
@@ -131,20 +132,20 @@
 						"pattern": /tresoar:NL_0400410000_3187a?_G_fol_.+?/
 					},
 					{
-						"name": "Bonnebladen",
-						"pattern": /^0$/
-					},
-					{
-						"name": "Achtergrondkaarten",
-						"pattern": /^ACHTERGROND:.+/
+						"name": "Tresoar Overig",
+						"pattern": /^tresoar:.+/
 					},
 					{
 						"name": "Overlays",
 						"pattern": /^PGR:.+?/
 					},
 					{
-						"name": "Overig Tresoar",
-						"pattern": /^tresoar:.+/
+						"name": "Bonnebladen",
+						"pattern": /^0$/
+					},
+					{
+						"name": "Achtergrondkaarten",
+						"pattern": /^ACHTERGROND:.+/
 					},
 					{
 						"name": "Wat moet dit hier?",
@@ -276,6 +277,7 @@
 				})
 			}));
 
+			/*
 			viewer.addLayer(new ol.layer.Vector({
 				id: 'cite:TEST_1622_1749',
 				name: 'Huisnamen',
@@ -326,21 +328,11 @@
 					});
 				}
 			}));
+			*/
 
 			viewer.addLayer(new ol.layer.Vector({
 				id: 'PGR:CHK2_StinzenStates',
 				name: 'Stinzen en States',
-				bbox: new ol.Feature({
-					geometry: new ol.geom.Polygon([[
-						[148209.8999999985, 538183.3000000007],
-						[213013.49130000174, 538183.3000000007],
-						[213013.49130000174, 606238.3000000007],
-						[148209.8999999985, 606238.3000000007]
-					]], 'XY')
-				}),
-				extent: [
-					148209.8999999985, 538183.3000000007,
-					213013.49130000174, 606238.3000000007],
 				source: new ol.source.Vector({
 					loader: function(extent, resolution, projection) {
 						$.ajax('http://geoportaal.fryslan.nl/arcgis/services/ProvinciaalGeoRegister/PGR_features/GeoDataServer/WFSServer', {
@@ -403,10 +395,82 @@
 				})()
 			}));
 
+			viewer.addLayer(new ol.layer.Vector({
+				id: 'PGR:CHK2_Boerderijplaatsen',
+				name: 'Boerderijplaatsen',
+				source: new ol.source.Vector({
+					loader: function(extent, resolution, projection) {
+						$.ajax('http://geoportaal.fryslan.nl/arcgis/services/ProvinciaalGeoRegister/PGR_features/GeoDataServer/WFSServer', {
+							type: 'GET',
+							crossdomain: true,
+							data: {
+								service: 'WFS',
+								version: '1.0.0',
+								request: 'GetFeature',
+								typename: 'PGR:CHK2_Boerderijplaatsen',
+								srsname: 'EPSG:28992',
+								bbox: extent.join(',')
+							}
+						}).done(function(data) {
+							var format = new ol.format.GML2();
+							this.addFeatures(format.readFeatures(data));
+						}.bind(this));
+					},
+					strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({
+						maxZoom: 19
+					})),
+					projection: 'EPSG:28992'
+				}),
+				style: new ol.style.Style({
+					stroke: new ol.style.Stroke({
+						color: 'black',
+						width: 0.8
+					}),
+					fill: new ol.style.Fill({
+						color: [0, 0, 255, 0.5]
+					})
+				})
+			}));
+
+			viewer.addLayer(new ol.layer.Vector({
+				id: 'PGR:CHK2_Boerderijplaatsen',
+				name: 'Boerderijplaatsen',
+				source: new ol.source.Vector({
+					loader: function(extent, resolution, projection) {
+						$.ajax('http://geoportaal.fryslan.nl/arcgis/services/ProvinciaalGeoRegister/PGR_features/GeoDataServer/WFSServer', {
+							type: 'GET',
+							crossdomain: true,
+							data: {
+								service: 'WFS',
+								version: '1.0.0',
+								request: 'GetFeature',
+								typename: 'PGR:CHK2_Boerderijplaatsen',
+								srsname: 'EPSG:28992',
+								bbox: extent.join(',')
+							}
+						}).done(function(data) {
+							var format = new ol.format.GML2();
+							this.addFeatures(format.readFeatures(data));
+						}.bind(this));
+					},
+					strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({
+						maxZoom: 19
+					})),
+					projection: 'EPSG:28992'
+				}),
+				style: new ol.style.Style({
+					stroke: new ol.style.Stroke({
+						color: 'black',
+						width: 0.8
+					}),
+					fill: new ol.style.Fill({
+						color: [0, 0, 255, 0.5]
+					})
+				})
+			}));
+
 			// Start with an Open Topo achtergrond kaart as layer
 			viewer.map.addLayer(viewer.layers['ACHTERGROND:OPENTOPO']);
-
-			viewer.map.addLayer(viewer.layers['cite:TEST_1622_1749']);
 
 			$('#address-query').on('typeahead:select', function(e, address) {
 				switch (address.niveau) {
