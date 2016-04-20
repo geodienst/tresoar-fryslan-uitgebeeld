@@ -261,11 +261,18 @@
 			});
 
 
-		// Make the cursor a pointer for anything clickable
+		// Make the cursor a pointer for anything clickable, but only after a small delay because
+		// calling the hasFeatureAtPixel function *during* mouse movement is very, very expensive.
+		var updatePointerTimeout;
 		this.map.on('pointermove', function(e) {
-			var pixel = viewer.map.getEventPixel(e.originalEvent);
-			var hit = viewer.map.hasFeatureAtPixel(pixel);
-			viewer.map.getTarget().style.cursor = hit ? 'pointer' : '';
+			viewer.map.getTarget().style.cursor = '';
+			
+			clearTimeout(updatePointerTimeout);
+			updatePointerTimeout = setTimeout(function() {
+				var pixel = viewer.map.getEventPixel(e.originalEvent);
+				var hit = viewer.map.hasFeatureAtPixel(pixel);
+				viewer.map.getTarget().style.cursor = hit ? 'pointer' : '';
+			}, 250);
 		});
 
 		// When clicking on the map, we might click a feature!
