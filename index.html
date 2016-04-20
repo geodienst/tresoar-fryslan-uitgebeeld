@@ -331,12 +331,11 @@
 
 			viewer.addLayer(new ol.layer.Vector({
 				id: 'PGR:CHK2_StinzenStates',
-				name: 'Stinzen en States',
+				name: 'States en Stinzen',
 				source: new ol.source.Vector({
 					loader: function(extent, resolution, projection) {
-						$.ajax('http://geoportaal.fryslan.nl/arcgis/services/ProvinciaalGeoRegister/PGR_features/GeoDataServer/WFSServer', {
+						$.ajax('https://geoserver.fryslanuitgebeeld.frl/ows', {
 							type: 'GET',
-							crossdomain: true,
 							data: {
 								service: 'WFS',
 								version: '1.0.0',
@@ -396,49 +395,11 @@
 
 			viewer.addLayer(new ol.layer.Vector({
 				id: 'PGR:CHK2_Boerderijplaatsen',
-				name: 'Boerderijplaatsen',
+				name: 'Historische boerenerven',
 				source: new ol.source.Vector({
 					loader: function(extent, resolution, projection) {
-						$.ajax('http://geoportaal.fryslan.nl/arcgis/services/ProvinciaalGeoRegister/PGR_features/GeoDataServer/WFSServer', {
+						$.ajax('https://geoserver.fryslanuitgebeeld.frl/ows', {
 							type: 'GET',
-							crossdomain: true,
-							data: {
-								service: 'WFS',
-								version: '1.0.0',
-								request: 'GetFeature',
-								typename: 'PGR:CHK2_Boerderijplaatsen',
-								srsname: 'EPSG:28992',
-								bbox: extent.join(',')
-							}
-						}).done(function(data) {
-							var format = new ol.format.GML2();
-							this.addFeatures(format.readFeatures(data));
-						}.bind(this));
-					},
-					strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({
-						maxZoom: 19
-					})),
-					projection: 'EPSG:28992'
-				}),
-				style: new ol.style.Style({
-					stroke: new ol.style.Stroke({
-						color: 'black',
-						width: 0.8
-					}),
-					fill: new ol.style.Fill({
-						color: [0, 0, 255, 0.5]
-					})
-				})
-			}));
-
-			viewer.addLayer(new ol.layer.Vector({
-				id: 'PGR:CHK2_Boerderijplaatsen',
-				name: 'Boerderijplaatsen',
-				source: new ol.source.Vector({
-					loader: function(extent, resolution, projection) {
-						$.ajax('http://geoportaal.fryslan.nl/arcgis/services/ProvinciaalGeoRegister/PGR_features/GeoDataServer/WFSServer', {
-							type: 'GET',
-							crossdomain: true,
 							data: {
 								service: 'WFS',
 								version: '1.0.0',
