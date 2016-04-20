@@ -521,7 +521,7 @@
 			return $.Deferred().resolve(
 				$.map(feature.getProperties(), function(v, k) {
 					// Skip these default attributes that are boring
-					if (/SHAPE.*|GLOBALID|OBJECTID/.test(k))
+					if (/SHAPE.*|GLOBALID|OBJECTID|the_geom/.test(k))
 						return null;
 
 					return {key: k, value: v};
