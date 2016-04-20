@@ -160,6 +160,7 @@
 						content: function(feature) {
 							return jQuery.Deferred().resolve($.map(feature.getProperties(), function(v, k) {
 								if ([
+									"the_geom",
 									"OBJECTID",
 									"UNI_NAAM",
 									"BUI_NAAM",
@@ -184,6 +185,10 @@
 									"SHAPE_Area"
 								].indexOf(k) !== -1)
 									return null;
+
+								// Make 'TOELICHTIN' a link
+								if (k == 'TOELICHTIN')
+									v = $('<a>').attr({'href': v, 'target': '_blank'}).text(v);
 
 								return {key: k, value: v};
 							}).toHTMLTable());
@@ -220,10 +225,11 @@
 					layer: 'brtachtergrondkaart',
 					matrixSet: 'EPSG:28992',
 					format: 'image/png',
-					attributions: [new ol.Attribution({
-					html: 'Kaartgegevens: © <a href="http://www.cbs.nl">CBS</a>, <a href="http://www.kadaster.nl">Kadaster</a>, <a href="http://openstreetmap.org">OpenStreetMap Bijdragers</a><span class="printhide"> (<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>)' +
-					' Kaartviewer: <a href="http://rug.nl/geo">Geodienst RUG</a>'
-					})],
+					attributions: [
+						new ol.Attribution({
+							html: '<a href="http://www.kadaster.nl" target="_blank">BRT Achtergrond © Kadaster</a>'
+						})
+					],
 					projection: Viewer.EPSG28992,
 					tileGrid: Viewer.EPSG28992.tileGrid
 				})
@@ -238,10 +244,11 @@
 					layer: 'Basiskaarten_Open_Topo',
 					matrixSet: 'EPSG:28992',
 					format: 'image/png',
-					attributions: [new ol.Attribution({
-					html: 'Kaartbeeld: © <a href="http://www.imergis.nl/">Jan-Willem van Aalst</a> ' +
-						  'Webservice: <a href="http://esri.nl/">Esri Nederland</a>'
-					})],
+					attributions: [
+						new ol.Attribution({
+							html: '<a href="http://www.imergis.nl/" target="_blank">OpenTopo © Jan-Willem van Aalst</a>, <a href="http://esri.nl/" target="_blank">Esri Nederland</a>'
+						})
+					],
 					projection: Viewer.EPSG28992,
 					tileGrid: Viewer.EPSG28992.tileGrid
 				})
@@ -259,10 +266,11 @@
 					matrixSet: 'nltilingschema',
 					format: 'image/jpeg',
 					style: '',
-					attributions: [new ol.Attribution({
-					html: 'Luchtfoto: <a href="https://www.pdok.nl/nl/copyright/luchtfotos/" target="_blank">© PDOK CC-BY-NC</a>'+
-					' Kaartviewer: <a href="http://rug.nl/geo">Geodienst RUG</a>'
-					})],
+					attributions: [
+						new ol.Attribution({
+							html: '<a href="https://www.pdok.nl/nl/copyright/luchtfotos/" target="_blank">Luchtfoto © PDOK</a>'
+						})
+					],
 					projection: Viewer.EPSG28992,
 					visibility: true,
 					zoomOffset: 2,
@@ -349,6 +357,11 @@
 							this.addFeatures(format.readFeatures(data));
 						}.bind(this));
 					},
+					attributions: [
+						new ol.Attribution({
+							html: '<a href="http://www.fryslan/" target="_blank">CHK2 © Provincie Fryslân</a>'
+						})
+					],
 					strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({
 						maxZoom: 19
 					})),
@@ -414,6 +427,11 @@
 								this.addFeatures(format.readFeatures(data));
 							}.bind(this));
 						},
+						attributions: [
+							new ol.Attribution({
+								html: '<a href="http://www.fryslan/" target="_blank">CHK2 © Provincie Fryslân</a>'
+							})
+						],
 						strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({
 							maxZoom: 19
 						})),

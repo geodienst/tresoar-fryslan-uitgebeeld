@@ -31,6 +31,10 @@
 		matrixIds: resolutions.map(function(resolution, index) { return 'EPSG:28992:' + index; })
 	});
 
+	var geodienstAttribution = new ol.Attribution({
+		html: '<a href="http://www.geodienst.xyz/" target="_blank">Geodienst</a>'
+	});
+
 	Viewer.prototype.initialize = function() {
 		var viewer = this;
 		
@@ -56,9 +60,20 @@
 			view: new ol.View({
 				projection: EPSG28992,
 				center: [194898.97512816024, 572819.4255151745], // Center on Fryslân!
+				extent: [7624.23727, 305942.69072, 285769.01916, 625595.51780], // OpenTopo extent
 				maxZoom: 19,
 				minZoom: 8,
 				zoom: 10.5
+			}),
+			controls: ol.control.defaults({
+				attribution: true,
+				attributionOptions: {
+					render: function(mapEvent) {
+						// Add the Geodienst attribution, which is not connected to a specific source
+						mapEvent.frameState.attributions.geodienst = geodienstAttribution;
+						this.updateElement_(mapEvent.frameState);
+					}
+				}
 			})
 		});
 

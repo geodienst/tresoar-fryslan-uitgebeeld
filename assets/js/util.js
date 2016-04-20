@@ -36,7 +36,11 @@ Array.prototype.toHTMLTable = function() {
 	this.forEach(function(pair) {
 		var $tr = $('<tr>').appendTo($tbody);
 		$('<th>').text(pair.key).appendTo($tr);
-		$('<td>').text(pair.value).appendTo($tr);
+		if (pair.value instanceof jQuery) {
+			$('<td>').append(pair.value).appendTo($tr);
+		} else {
+			$('<td>').text(pair.value).appendTo($tr);
+		}
 	});
 
 	return $table;
