@@ -630,7 +630,6 @@
 				loader: function(extent, resolution, projection) {
 					$.ajax('http://localhost:8080/geoserver/ows', {
 						type: 'GET',
-						crossdomain: true,
 						data: {
 							service: 'WFS',
 							version: '1.0.0',

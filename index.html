@@ -296,7 +296,6 @@
 						loader: function(extent, resolution, projection) {
 							$.ajax('http://geoserver.geodienst.dev/ows', {
 								type: 'GET',
-								crossdomain: true,
 								data: {
 									service: 'WFS',
 									version: '1.0.0',
