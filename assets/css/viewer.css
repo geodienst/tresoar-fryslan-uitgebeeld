@@ -39,6 +39,14 @@ html, body {
 	font-size: 12px;
 }
 
+#layers .back-button {
+	display: block;
+    line-height: 42px;
+    padding-left: 15px;
+    background: linear-gradient(to bottom,#199713,#3aaa35);
+    color: white;
+}
+
 #layers .layer-list {
 	overflow: hidden;
 	overflow-y: auto;
