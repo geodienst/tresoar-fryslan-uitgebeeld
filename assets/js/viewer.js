@@ -31,6 +31,10 @@
 		matrixIds: resolutions.map(function(resolution, index) { return 'EPSG:28992:' + index; })
 	});
 
+	var geodienstAttribution = new ol.Attribution({
+		html: '<a href="http://www.geodienst.xyz/" target="_blank">Geodienst</a>'
+	});
+
 	Viewer.prototype.initialize = function() {
 		var viewer = this;
 		
@@ -56,9 +60,20 @@
 			view: new ol.View({
 				projection: EPSG28992,
 				center: [194898.97512816024, 572819.4255151745], // Center on Fryslân!
+				extent: [7624.23727, 305942.69072, 285769.01916, 625595.51780], // OpenTopo extent
 				maxZoom: 19,
 				minZoom: 8,
 				zoom: 10.5
+			}),
+			controls: ol.control.defaults({
+				attribution: true,
+				attributionOptions: {
+					render: function(mapEvent) {
+						// Add the Geodienst attribution, which is not connected to a specific source
+						mapEvent.frameState.attributions.geodienst = geodienstAttribution;
+						this.updateElement_(mapEvent.frameState);
+					}
+				}
 			})
 		});
 
@@ -220,7 +235,7 @@
 		// Feature selection menu, used when clicking on multiple overlapping features
 		this.featureSelectionMenu = new ol.Overlay({
 			element: $('#feature-selection-menu').detach().get(0),
-			positioning: 'center-left',
+			positioning: 'top-left',
 			stopEvent: true
 		});
 
@@ -261,11 +276,18 @@
 			});
 
 
-		// Make the cursor a pointer for anything clickable
+		// Make the cursor a pointer for anything clickable, but only after a small delay because
+		// calling the hasFeatureAtPixel function *during* mouse movement is very, very expensive.
+		var updatePointerTimeout;
 		this.map.on('pointermove', function(e) {
-			var pixel = viewer.map.getEventPixel(e.originalEvent);
-			var hit = viewer.map.hasFeatureAtPixel(pixel);
-			viewer.map.getTarget().style.cursor = hit ? 'pointer' : '';
+			viewer.map.getTarget().style.cursor = '';
+			
+			clearTimeout(updatePointerTimeout);
+			updatePointerTimeout = setTimeout(function() {
+				var pixel = viewer.map.getEventPixel(e.originalEvent);
+				var hit = viewer.map.hasFeatureAtPixel(pixel);
+				viewer.map.getTarget().style.cursor = hit ? 'pointer' : '';
+			}, 250);
 		});
 
 		// When clicking on the map, we might click a feature!
@@ -275,6 +297,9 @@
 			viewer.map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
 				if (!layer) return;
 
+				// If the feature is a clustering feature which is just a proxy for a
+				// set of real features, add the real features to the list instead of
+				// the cluster.
 				if ('features' in feature.getProperties())
 					feature.getProperties().features.map(function(feature) {
 						features.push({feature: feature, layer: layer});
@@ -283,9 +308,9 @@
 					features.push({feature: feature, layer: layer});
 			});
 
-			if (features.length === 1)
+			if (features.length === 1) {
 				viewer.showFeaturePopup(features[0], evt);
-			else if (features.length > 1) {
+			} else if (features.length > 1) {
 				viewer.hideFeaturePopup();
 				viewer.showFeatureSelector(features, evt);
 			}
@@ -521,7 +546,7 @@
 			return $.Deferred().resolve(
 				$.map(feature.getProperties(), function(v, k) {
 					// Skip these default attributes that are boring
-					if (/SHAPE.*|GLOBALID|OBJECTID/.test(k))
+					if (/SHAPE.*|GLOBALID|OBJECTID|the_geom/.test(k))
 						return null;
 
 					return {key: k, value: v};
@@ -605,7 +630,6 @@
 				loader: function(extent, resolution, projection) {
 					$.ajax('http://localhost:8080/geoserver/ows', {
 						type: 'GET',
-						crossdomain: true,
 						data: {
 							service: 'WFS',
 							version: '1.0.0',

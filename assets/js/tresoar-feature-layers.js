@@ -2,7 +2,6 @@ Viewer.loaders.WFS = function(url, viewer)
 {
 	$.ajax(url, {
 		type: 'GET',
-		crossdomain: true,
 		dataType: 'xml',
 		data: {
 			service: 'WFS',
@@ -41,7 +40,6 @@ Viewer.loaders.WFS = function(url, viewer)
 						loader: function(extent, resolution, projection) {
 							$.ajax(url, {
 								type: 'GET',
-								crossdomain: true,
 								data: {
 									service: 'WFS',
 									version: '1.0.0',

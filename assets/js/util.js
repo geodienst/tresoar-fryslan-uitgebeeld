@@ -9,15 +9,6 @@ if (!Array.prototype.find) {
 	};
 }
 
-// Helper for jQuery.ajax and co. to easily use proxy server to go around CSRP
-jQuery.ajaxPrefilter(function(options) {
-	if (options.crossdomain) {
-		options.url = 'proxy.php?url=' + encodeURIComponent(options.url);
-		//options.url = 'http://mirror.ikhoefgeen.nl/tresoar-proxy.php?url=' + encodeURIComponent(options.url);
-		options.crossdomain = false;
-	}
-});
-
 jQuery.fn.atPoint = function(point) {
 	return $(this).filter(function() {
 		var offset = $(this).offset(),
@@ -36,7 +27,11 @@ Array.prototype.toHTMLTable = function() {
 	this.forEach(function(pair) {
 		var $tr = $('<tr>').appendTo($tbody);
 		$('<th>').text(pair.key).appendTo($tr);
-		$('<td>').text(pair.value).appendTo($tr);
+		if (pair.value instanceof jQuery) {
+			$('<td>').append(pair.value).appendTo($tr);
+		} else {
+			$('<td>').text(pair.value).appendTo($tr);
+		}
 	});
 
 	return $table;

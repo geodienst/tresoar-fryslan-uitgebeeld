@@ -13,8 +13,6 @@ var pdok = new Bloodhound({
 			return settings;
 		},
 		transform: function(xmlDoc) {
-			console.log('doc', xmlDoc);
-
 			var ns = {
 				xls: 'http://www.opengis.net/xls',
 				gml: 'http://www.opengis.net/gml'
@@ -86,7 +84,6 @@ var pdok = new Bloodhound({
 				adressen.push(adres);
 			}
 
-			console.log(adressen);
 			return adressen;
 		}
 	}

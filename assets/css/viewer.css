@@ -18,6 +18,10 @@ html, body {
 	background: #C1DEE5; /* Same color as OpenTopo */
 }
 
+#map .ol-attribution li:not(:first-child):not(:last-child):after {
+	content: ', ';
+}
+
 #geocoder {
 	position: absolute;
 	top: 10px;
