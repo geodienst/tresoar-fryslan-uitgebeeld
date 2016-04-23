@@ -116,41 +116,32 @@
 						"omschrijving": "Alle gegeorefereerde kaarten",
 						"type": "WMS",
 						"url": "https://geoserver.fryslanuitgebeeld.frl/ows"
-					},
-					{
-						"omschrijving": "Bonnebladen",
-						"type": "WMS",
-						"url": "https://geo.rug.nl/arcgis/services/HistorischeKaarten/Bonnebladen/ImageServer/WMSServer"
 					}
 				],
 				groups: [
 					{
-						"name": "Atlas 1718",
+						"name": "Achtergrondlagen",
+						"pattern": /^ACHTERGROND:.+/
+					},
+					{
+						"name": "Schotanus-Halma (1718)",
 						"pattern": /^tresoar:NL_0400410000_3227_G_kluis.+?/
 					},
 					{
-						"name": "Atlas 1698",
+						"name": "Schotanus (1698)",
 						"pattern": /^tresoar:NL_0400410000_K_186.+?/
 					},
 					{
-						"name": "Atlas 1664",
+						"name": "Schotanus (1664)",
 						"pattern": /tresoar:NL_0400410000_3187a?_G_fol_.+?/
 					},
 					{
-						"name": "Tresoar Overig",
+						"name": "Collectie Tresoar",
 						"pattern": /^tresoar:.+/
 					},
 					{
 						"name": "Overlays",
-						"pattern": /^PGR:.+?/
-					},
-					{
-						"name": "Bonnebladen",
-						"pattern": /^0$/
-					},
-					{
-						"name": "Achtergrondkaarten",
-						"pattern": /^ACHTERGROND:.+/
+						"pattern": /^(PGR|RCE):.+?/
 					},
 					{
 						"name": "Wat moet dit hier?",
@@ -166,8 +157,6 @@
 						content: function(feature) {
 							return jQuery.Deferred().resolve($.map(feature.getProperties(), function(v, k) {
 								if ([
-									"the_geom",
-									"OBJECTID",
 									"UNI_NAAM",
 									"BUI_NAAM",
 									"STI_PLAATS",
@@ -185,15 +174,59 @@
 									"HERKOMST_1",
 									"BEHEERDER",
 									"BRONHOUDER",
-									"TYPE",
-									"GLOBALID",
-									"SHAPE_Leng",
-									"SHAPE_Area"
-								].indexOf(k) !== -1)
+									"TYPE"
+								].indexOf(k) === -1)
 									return null;
 
 								// Make 'TOELICHTIN' a link
 								if (k == 'TOELICHTIN')
+									v = $('<a>').attr({'href': v, 'target': '_blank'}).text(v);
+
+								return {key: k, value: v};
+							}).toHTMLTable());
+						}
+					},
+					{
+						pattern: /^RCE:Rijksmonumenten$/,
+						header: function(feature) {
+							return feature.get('NAAM') || feature.get('CBSCATEGOR');
+						},
+						content: function(feature) {
+							return jQuery.Deferred().resolve($.map(feature.getProperties(), function(v, k) {
+								if ([
+									"RIJKSMONNR",
+									"NAAM",
+									"TYPEMONUM",
+									"CBSCATEGOR",
+									"CBSCODE",
+									"OORSPRFUNC",
+									"SUBCATNR",
+									"SUBCATOMS",
+									"HFDCATCODE",
+									"HFDCATOMS",
+									"TYPECHOBJ",
+									"BEGBOUWJR",
+									"EINDBOUWJR",
+									"GRS_DATUM",
+									"INSCHRDAT",
+									"GEMEENTE",
+									"PROVINCIE",
+									"PROVCODE",
+									"PLAATS",
+									"SITUERING",
+									"STRAAT",
+									"HUISNUMMER",
+									"TOEVOEGING",
+									"POSTCODE",
+									"BAG_PLAATS",
+									"COORDHERK",
+									"KICH_URL",
+									"STATUS",
+									"EXTRACTDAT",
+								].indexOf(k) === -1)
+									return null;
+
+								if (k == 'KICH_URL')
 									v = $('<a>').attr({'href': v, 'target': '_blank'}).text(v);
 
 								return {key: k, value: v};
@@ -262,7 +295,7 @@
 
 			viewer.addLayer(new ol.layer.Tile({
 				id: 'ACHTERGROND:LUFO',
-				name: 'Luchtfoto\'s',
+				name: 'Luchtfoto',
 				extent: Viewer.EPSG28992.extent,
 				source: new ol.source.WMTS({
 					url: 'http://geodata1.nationaalgeoregister.nl/luchtfoto/wmts',
@@ -287,6 +320,25 @@
 							return index < 10 ? "0" + index : index;
 						})
 					})
+				})
+			}));
+
+			viewer.addLayer(new ol.layer.Tile({
+				id: 'ACHTERGROND:Bonnebladen',
+				name: 'Bonnebladen',
+				extent: Viewer.EPSG28992.extent,
+				source: new ol.source.WMTS({
+					url: 'https://geo.rug.nl/arcgis/services/HistorischeKaarten/Bonnebladen/ImageServer/WMSServer',
+					layer: '0',
+					matrixSet: 'EPSG:28992',
+					format: 'image/png',
+					attributions: [
+						new ol.Attribution({
+							html: '<a href="http://www.kadaster.nl" target="_blank">BRT Achtergrond © Kadaster</a>'
+						})
+					],
+					projection: Viewer.EPSG28992,
+					tileGrid: Viewer.EPSG28992.tileGrid
 				})
 			}));
 
@@ -411,6 +463,98 @@
 				})()
 			}));
 
+			viewer.addLayer(new ol.layer.Vector({
+				id: 'RCE:Rijksmonumenten',
+				name: 'Rijksmonumenten',
+				extent: [162260.09673250082, 541812.210502058,
+					197949.28417707223, 592629.1556384563],
+				source: new ol.source.Cluster({
+					distance: 40,
+					source: new ol.source.Vector({
+						loader: function(extent, resolution, projection) {
+							$.ajax('http://geoserver.geodienst.dev/ows', {
+								type: 'GET',
+								data: {
+									service: 'WFS',
+									version: '1.0.0',
+									request: 'GetFeature',
+									typename: 'RCE:Rijksmonumenten',
+									srsname: 'EPSG:28992', // todo: get this info from $feature?
+									bbox: extent.join(',')
+								}
+							}).done(function(data) {
+								var format = new ol.format.GML2();
+								this.addFeatures(format.readFeatures(data));
+							}.bind(this));
+						},
+						strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({
+							maxZoom: 19
+						})),
+						projection: 'EPSG:28992'
+					}),
+				}),
+				style: function(feature, resolution) {
+					var size = feature.get('features').length;
+					return new ol.style.Style({
+						geometry: new ol.geom.Circle(feature.getGeometry().getCoordinates(), resolution * 10),
+						stroke: new ol.style.Stroke({
+							color: '#fff'
+						}),
+						fill: new ol.style.Fill({
+							color: '#3399CC'
+						}),
+						text: new ol.style.Text({
+							text: size.toString(),
+							fill: new ol.style.Fill({
+								color: '#fff'
+							})
+						})
+					});
+				}
+			}));
+
+			viewer.addLayer(new ol.layer.Vector({
+				id: 'RCE:Buitenplaatsen Fryslan',
+				name: 'Buitenplaatsen',
+				source: new ol.source.Vector({
+					loader: function(extent, resolution, projection) {
+						$.ajax('http://geoserver.geodienst.dev/ows', {
+							type: 'GET',
+							data: {
+								service: 'WFS',
+								version: '1.0.0',
+								request: 'GetFeature',
+								typename: 'RCE:Buitenplaatsen Fryslan',
+								srsname: 'EPSG:28992', // todo: get this info from $feature?
+								bbox: extent.join(',')
+							}
+						}).done(function(data) {
+							var format = new ol.format.GML2();
+							this.addFeatures(format.readFeatures(data));
+						}.bind(this));
+					},
+					attributions: [
+						new ol.Attribution({
+							html: '<a href="http://cultureelerfgoed.nl" target="_blank">Buitenplaatsen © Rijksdienst voor het Cultureel Erfgoed</a>'
+						})
+					],
+					strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({
+						maxZoom: 19
+					})),
+					projection: 'EPSG:28992'
+				}),
+				style: new ol.style.Style({
+					stroke: new ol.style.Stroke({
+						color: 'black',
+						width: 0.8
+					}),
+					fill: new ol.style.Fill({
+						color: [0, 0, 255, 0.5]
+					})
+				})
+			}));
+
+			/*
 			viewer.addLayer(new ol.layer.Image({
 				id: 'PGR:CHK2_Boerderijplaatsen',
 				name: 'Historische boerenerven',
@@ -453,6 +597,7 @@
 					})
 				})
 			}));
+			*/
 
 			// Start with an Open Topo achtergrond kaart as layer
 			viewer.map.addLayer(viewer.layers['ACHTERGROND:OPENTOPO']);
