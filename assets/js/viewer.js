@@ -50,7 +50,32 @@
 		this.layers = {};
 
 		this.map = new ol.Map({
-			layers: [],
+			layers: [
+				new ol.layer.Vector({
+					id: 'internal:nederland',
+					source: new ol.source.Vector({
+						loader: function(extent, resolution, projection) {
+							$.ajax('provinces.geojson', {
+								type: 'GET',
+								dataType: 'json'
+							}).done(function(data) {
+								var format = new ol.format.GeoJSON();
+								this.addFeatures(format.readFeatures(data, {
+									dataProjection: 'EPSG:4326',
+									featureProjection: 'EPSG:28992'
+								}));
+							}.bind(this));
+						},
+						projection: 'EPSG:28992'
+					}),
+					style: new ol.style.Style({
+						stroke: new ol.style.Stroke({
+							color: [0, 0, 0, 0.15],
+							width: 1
+						})
+					})
+				})
+			],
 			target: $('#map').get(0),
 			maxResolution: 860.16,
 			numZoomLevels: 12,
@@ -82,7 +107,6 @@
 		this.map.getLayers().on('add', this.triggerUpdateLayerList.bind(this));
 
 		this.map.getLayers().on('remove', this.triggerUpdateLayerList.bind(this));
-
 
 		this.$activeLayers = $('#active-layers');
 
@@ -286,7 +310,7 @@
 			clearTimeout(updatePointerTimeout);
 			updatePointerTimeout = setTimeout(function() {
 				var pixel = viewer.map.getEventPixel(e.originalEvent);
-				var hit = viewer.map.hasFeatureAtPixel(pixel);
+				var hit = viewer.map.hasFeatureAtPixel(pixel, viewer.layerFilter, viewer);
 				viewer.map.getTarget().style.cursor = hit ? 'pointer' : '';
 			}, 250);
 		});
@@ -307,7 +331,7 @@
 					});
 				else
 					features.push({feature: feature, layer: layer});
-			});
+			}, null, viewer.layerFilter, viewer);
 
 			if (features.length === 1) {
 				viewer.showFeaturePopup(features[0], evt);
@@ -339,6 +363,10 @@
 			.each(function(i) { self.layers[this].setZIndex($layers.length - 1 - i); });
 	};
 
+	Viewer.prototype.layerFilter = function(layer) {
+		return !/^internal:/.test(layer.get('id'));
+	};
+
 	function getSurface(extent) {
 		var size = ol.extent.getSize(extent);
 		return size[0] * size[1];
@@ -347,6 +375,7 @@
 	// Render the list of layers (using Transparency.js templating)
 	Viewer.prototype.updateLayerList = function() {
 		var activeLayerIds = this.map.getLayers().getArray()
+			.filter(this.layerFilter)
 			.map(function(layer) { return layer.get('id'); });
 
 		// Hide all tooltips before refreshing the list because sometimes the element
@@ -358,7 +387,8 @@
 		this.featureOverlay.getSource().clear();
 
 		this.$activeLayers.render(
-			$.makeArray(this.map.getLayers().getArray())
+			this.map.getLayers().getArray()
+			.filter(this.layerFilter)
 			// Extract all the attributes we want to render from the layers
 			.map(function(layer) {
 				return {
