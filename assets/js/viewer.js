@@ -68,6 +68,7 @@
 			controls: ol.control.defaults({
 				attribution: true,
 				attributionOptions: {
+					collapsed: false,
 					render: function(mapEvent) {
 						// Add the Geodienst attribution, which is not connected to a specific source
 						mapEvent.frameState.attributions.geodienst = geodienstAttribution;
