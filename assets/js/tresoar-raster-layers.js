@@ -59,8 +59,8 @@ Viewer.loaders.WMS = function(options, viewer) {
 					service: 'wms',
 					version: '1.3.0',
 					request: 'getMap',
-					format: 'image/png',
-					transparent: true,
+					format: 'image/jpeg',
+					transparent: false,
 					styles: '',
 					layers: name,
 					crs: 'EPSG:28992',
@@ -76,7 +76,9 @@ Viewer.loaders.WMS = function(options, viewer) {
 					serverType: 'geoserver',
 					params: {
 						LAYERS: name,
-						TILED: true	
+						TILED: true,
+						TRANSPARENT: false,
+						FORMAT: 'image/jpeg'
 					},
 					projection: 'EPSG:28992'
 				})

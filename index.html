@@ -348,7 +348,9 @@
 					url: 'https://services.arcgisonline.nl/arcgis/rest/services/Basiskaarten/Open_Topo/MapServer',
 					layer: 'Basiskaarten_Open_Topo',
 					matrixSet: 'EPSG:28992',
-					format: 'image/png',
+					params: {
+						FORMAT: 'jpg'
+					},
 					attributions: [
 						new ol.Attribution({
 							html: '<a href="http://www.imergis.nl/" target="_blank">OpenTopo © Jan-Willem van Aalst</a>, <a href="http://esri.nl/" target="_blank">Esri Nederland</a>'
@@ -393,16 +395,20 @@
 				id: 'ACHTERGROND:Bonnebladen',
 				name: 'Bonnebladen',
 				extent: Viewer.EPSG28992.extent,
-				source: new ol.source.WMTS({
+				source: new ol.source.TileWMS({
 					url: 'https://geo.rug.nl/arcgis/services/HistorischeKaarten/Bonnebladen/ImageServer/WMSServer',
-					layer: '0',
-					matrixSet: 'EPSG:28992',
-					format: 'image/png',
 					attributions: [
 						new ol.Attribution({
 							html: '<a href="http://www.kadaster.nl" target="_blank">Bonnebladen © Kadaster</a>'
 						})
 					],
+					params: {
+						LAYERS: '0',
+						TILED: true,
+						TRANSPARENT: false,
+						FORMAT: 'image/jpeg'
+					},
+					matrixSet: 'EPSG:28992',
 					projection: Viewer.EPSG28992,
 					tileGrid: Viewer.EPSG28992.tileGrid
 				})
