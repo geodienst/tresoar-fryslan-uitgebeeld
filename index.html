@@ -110,12 +110,19 @@
 
 			document.domain = 'geodienst.dev';
 
+			var GEOSERVER_TRESOAR = 'https://geoserver.fryslanuitgebeeld.frl/ows';
+
 			var viewer = new Viewer({
 				sources: [
 					{
 						"omschrijving": "Alle gegeorefereerde kaarten",
 						"type": "WMS",
-						"url": "https://geoserver.fryslanuitgebeeld.frl/ows"
+						"url": GEOSERVER_TRESOAR,
+						"attributions": [
+							new ol.Attribution({
+								html: '<a href="http://www.tresoar.frl/" target="_blank">Historische kaarten © Tresoar</a>'
+							})
+						]
 					}
 				],
 				groups: [
@@ -458,7 +465,7 @@
 				name: 'States en Stinzen',
 				source: new ol.source.Vector({
 					loader: function(extent, resolution, projection) {
-						$.ajax('https://geoserver.fryslanuitgebeeld.frl/ows', {
+						$.ajax(GEOSERVER_TRESOAR, {
 							type: 'GET',
 							data: {
 								service: 'WFS',
@@ -531,7 +538,7 @@
 					distance: 40,
 					source: new ol.source.Vector({
 						loader: function(extent, resolution, projection) {
-							$.ajax('http://geoserver.geodienst.dev/ows', {
+							$.ajax(GEOSERVER_TRESOAR, {
 								type: 'GET',
 								data: {
 									service: 'WFS',
@@ -577,7 +584,7 @@
 				name: 'Buitenplaatsen',
 				source: new ol.source.Vector({
 					loader: function(extent, resolution, projection) {
-						$.ajax('http://geoserver.geodienst.dev/ows', {
+						$.ajax(GEOSERVER_TRESOAR, {
 							type: 'GET',
 							data: {
 								service: 'WFS',

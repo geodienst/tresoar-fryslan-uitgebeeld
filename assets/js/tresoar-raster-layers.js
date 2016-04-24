@@ -1,4 +1,4 @@
-Viewer.loaders.WMS = function(url, viewer) {
+Viewer.loaders.WMS = function(options, viewer) {
 	var ns = {
 		wms: 'http://www.opengis.net/wms'
 	};
@@ -11,7 +11,7 @@ Viewer.loaders.WMS = function(url, viewer) {
 		});
 	}
 
-	$.ajax(url, {
+	$.ajax(options.url, {
 		type: 'GET',
 		data: {
 			service: 'wms',
@@ -55,7 +55,7 @@ Viewer.loaders.WMS = function(url, viewer) {
 				name: title,
 				extent: extent,
 				bbox: bbox,
-				thumbnail: url + '?' + jQuery.param({
+				thumbnail: options.url + '?' + jQuery.param({
 					service: 'wms',
 					version: '1.3.0',
 					request: 'getMap',
@@ -71,19 +71,14 @@ Viewer.loaders.WMS = function(url, viewer) {
 					bbox: bbox.getGeometry().getExtent().join(',')
 				}),
 				source: new ol.source.TileWMS({
-					url: url,
+					url: options.url,
+					attributions: options.attributions,
 					serverType: 'geoserver',
 					params: {
 						LAYERS: name,
 						TILED: true	
 					},
 					projection: 'EPSG:28992'
-				}),
-				style: new ol.style.Style({
-					stroke: new ol.style.Stroke({
-						color: 'green',
-						width: 2
-					})
 				})
 			}));
 

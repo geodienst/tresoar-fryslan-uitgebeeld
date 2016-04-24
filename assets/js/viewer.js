@@ -32,14 +32,14 @@
 	});
 
 	var geodienstAttribution = new ol.Attribution({
-		html: '<a href="http://www.geodienst.xyz/" target="_blank">Geodienst</a>'
+		html: '<a href="http://www.geodienst.xyz/" target="_blank">Viewer: Geodienst</a>'
 	});
 
 	Viewer.prototype.initialize = function() {
 		var viewer = this;
 		
 		this.config.sources.forEach(function(source) {
-			Viewer.loaders[source.type](source.url, viewer);
+			Viewer.loaders[source.type](source, viewer);
 		});
 
 		// FIXME it would be more awesome if we could retrieve this list (excl the base layers)

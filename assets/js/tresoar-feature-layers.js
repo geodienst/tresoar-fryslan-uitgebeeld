@@ -1,6 +1,6 @@
-Viewer.loaders.WFS = function(url, viewer)
+Viewer.loaders.WFS = function(options, viewer)
 {
-	$.ajax(url, {
+	$.ajax(options.url, {
 		type: 'GET',
 		dataType: 'xml',
 		data: {
@@ -38,7 +38,7 @@ Viewer.loaders.WFS = function(url, viewer)
 					extent: extent,
 					source: new ol.source.Vector({
 						loader: function(extent, resolution, projection) {
-							$.ajax(url, {
+							$.ajax(options.url, {
 								type: 'GET',
 								data: {
 									service: 'WFS',
@@ -56,7 +56,8 @@ Viewer.loaders.WFS = function(url, viewer)
 						strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({
 							maxZoom: 19
 						})),
-						projection: 'EPSG:28992'
+						projection: 'EPSG:28992',
+						attributions: options.attributions
 					}),
 					style: new ol.style.Style({
 						stroke: new ol.style.Stroke({
