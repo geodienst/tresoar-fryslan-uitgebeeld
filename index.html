@@ -234,6 +234,65 @@
 						}
 					},
 					{
+						pattern: /^RCE:Buitenplaatsen$/,
+						header: function(feature) {
+							return feature.get('NAAM');
+						},
+						content: function(feature) {
+							return jQuery.Deferred().resolve($.map(feature.getProperties(), function(v, k) {
+								var mapping = {
+									"NAAM": {
+										label: "Naam"
+									},
+									"RIJKSMONNR": {
+										label: "Rijksmonumentnr"
+									},
+									"INSCHRIJF": {
+										label: "Inschrijfdatum",
+										value: function(v) {
+											var date = new Date(v);
+											return date.toLocaleString(navigator.languages[0], {year: 'numeric', month: 'long', day: 'numeric'});
+										}
+									},
+									"BEGRENSDAT": {
+										label: "Begrensdatum",
+										value: function(v) {
+											var date = new Date(v);
+											return date.toLocaleString(navigator.languages[0], {year: 'numeric', month: 'long', day: 'numeric'});
+										}
+									},
+									"STATUS": {
+										label: "Status"
+									},
+									"ONDERGROND": {
+										label: "Ondergrond"
+									},
+									"OPPERV_HA": {
+										label: "Oppervlak",
+										value: function(v) {
+											return $('<span>').text(v).append($('<abbr>').attr('title', 'Hectare').text('ha'));
+										}
+									},
+									"URL": {
+										label: "Link",
+										value: function(v) {
+											return $('<a>').attr({'href': v, 'target': '_blank'}).text(v);
+										}
+									}
+								};
+								
+								try {
+									return {
+										key: mapping[k].label,
+										value: (mapping[k].value || function(v) { return v; })(v, k)
+									};
+								} catch(e) {
+									return null;
+								}
+							}).toHTMLTable());
+						}
+					},
+					{
 						pattern: /^cite:TEST_1622_1749$/,
 						header: function(feature) {
 							return feature.get('txt');
@@ -514,7 +573,7 @@
 			}));
 
 			viewer.addLayer(new ol.layer.Vector({
-				id: 'RCE:Buitenplaatsen Fryslan',
+				id: 'RCE:Buitenplaatsen',
 				name: 'Buitenplaatsen',
 				source: new ol.source.Vector({
 					loader: function(extent, resolution, projection) {
@@ -524,7 +583,7 @@
 								service: 'WFS',
 								version: '1.0.0',
 								request: 'GetFeature',
-								typename: 'RCE:Buitenplaatsen Fryslan',
+								typename: 'RCE:Buitenplaatsen',
 								srsname: 'EPSG:28992', // todo: get this info from $feature?
 								bbox: extent.join(',')
 							}
