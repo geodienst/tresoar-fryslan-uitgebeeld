@@ -36,3 +36,11 @@ Array.prototype.toHTMLTable = function() {
 
 	return $table;
 }
+
+function throttle(callback, duration) {
+	var timeout;
+	return function() {
+		clearTimeout(timeout);
+		timeout = setTimeout(callback, duration);
+	};
+}

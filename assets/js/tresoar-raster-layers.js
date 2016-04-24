@@ -11,7 +11,7 @@ Viewer.loaders.WMS = function(options, viewer) {
 		});
 	}
 
-	$.ajax(options.url, {
+	return $.ajax(options.url, {
 		type: 'GET',
 		data: {
 			service: 'wms',
@@ -84,32 +84,5 @@ Viewer.loaders.WMS = function(options, viewer) {
 
 			return bbox;
 		});
-
-		// Add a debug map that contains all the extents of the just fetched WFS
-		/*
-		window.layers['GeoServerWMS'] = new ol.layer.Vector({
-			id: 'GeoServerWMS',
-			name: '#Geoserver WMS',
-			source: new ol.source.Vector({
-				features: wmsLayers,
-				strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({
-					maxZoom: 19
-				})),
-				projection: 'EPSG:28992',
-				attributions: [new ol.Attribution({
-					html: 'Geoserver bboxes'
-				})],
-			}),
-			style: new ol.style.Style({
-				stroke: new ol.style.Stroke({
-					color: 'green',
-					width: 2
-				}),
-				fill: new ol.style.Fill({
-					color: [0, 0, 255, 0.6]
-				})
-			})
-		});
-		*/
 	});
 };

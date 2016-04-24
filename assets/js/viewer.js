@@ -37,10 +37,17 @@
 
 	Viewer.prototype.initialize = function() {
 		var viewer = this;
+
+		this._isRestoringState = true;
 		
-		this.config.sources.forEach(function(source) {
-			Viewer.loaders[source.type](source, viewer);
-		});
+		$.when.apply(null,
+			this.config.sources.map(function(source) {
+				return Viewer.loaders[source.type](source, viewer);
+			}))
+			.then(function() {
+				if (document.location.hash.length > 1)
+					viewer.fromURL(document.location.hash.substr(1));
+			});
 
 		// FIXME it would be more awesome if we could retrieve this list (excl the base layers)
 		// from Geoserver directly (through GetCapabilities?)
@@ -105,9 +112,13 @@
 
 		// Update the layer list every time a layer is enabled or disabled
 		this.map.getLayers().on('add', this.triggerUpdateLayerList.bind(this));
-
 		this.map.getLayers().on('remove', this.triggerUpdateLayerList.bind(this));
 
+		// Update the state encoded in the current URL
+		var updatePermalink = throttle(this.updatePermalink.bind(this), 250);
+		this.map.getLayers().on(['add', 'remove'], updatePermalink);
+		this.map.getView().on(['change:center', 'change:resolution'], updatePermalink);
+		
 		this.$activeLayers = $('#active-layers');
 
 		// Enable Bootstrap tooltips in the dynamic #layers list
@@ -348,6 +359,8 @@
 
 		// Update the layer list now
 		this.triggerUpdateLayerList();
+
+		this._isRestoringState = false;
 	};
 
 	Viewer.prototype.addLayer = function(layer) {
@@ -559,6 +572,71 @@
 	Viewer.prototype.triggerUpdateLayerList = function() {
 		clearTimeout(layerListTimeout);
 		this.updateLayerList();
+	}
+
+	Viewer.prototype.updatePermalink = function() {
+		if (!this._isRestoringState)
+			window.history.replaceState(null, document.title, '#' + this.toURL());
+	}
+
+	Viewer.prototype.toURL = function() {
+		var data = {
+			layers: this.map.getLayers().getArray()
+				.filter(this.layerFilter)
+				.sort(function(a, b) { return b.getZIndex() - a.getZIndex(); })
+				.map(function(layer) { return layer.get('id') + '@' + layer.getOpacity(); })
+				.join(';'),
+			center: this.map.getView().getCenter().join(','),
+			resolution: this.map.getView().getResolution()
+		};
+
+		return Object.keys(data).map(function(key) {
+			return key + '=' + encodeURIComponent(data[key]);
+		}).join('&');
+	}
+
+	Viewer.prototype.fromURL = function(url) {
+		try {
+			this._isRestoringState = true;
+			
+			var components = {};
+			url.split('&').forEach(function(part) {
+				var pair = part.split('=', 2);
+				components[pair[0]] = decodeURIComponent(pair[1]);
+			});
+
+			var viewer = this;
+			var layers = this.map.getLayers();
+			var view = this.map.getView();
+			
+			var layerComponents = components.layers.split(';');
+			
+			// Remove all layers active at the moment
+			this.map.getLayers().getArray().filter(this.layerFilter).forEach(layers.remove.bind(layers));
+
+			// Add all the layers with the correct z-index and opacity to the view.
+			layerComponents
+				.map(function(layerComponent, index) {
+					var info = layerComponent.split('@', 2);
+					var layer = viewer.layers[info[0]];
+					if (!layer) return null;
+					layer.setOpacity(parseFloat(info[1]));
+					layer.setZIndex(layerComponents.length - index);
+					return layer;
+				})
+				.filter(function(layer) {
+					return layer !== null;
+				})
+				.forEach(layers.push.bind(layers));
+
+			if (components.center)
+				view.setCenter(components.center.split(',',2).map(function(v) { return parseFloat(v); }));
+
+			if (components.resolution)
+				view.setResolution(parseFloat(components.resolution));
+		} finally {
+			this._isRestoringState = false;
+		}
 	}
 
 	Viewer.prototype.defaultFeatureFilter = {

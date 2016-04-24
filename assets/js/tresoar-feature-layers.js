@@ -1,6 +1,6 @@
 Viewer.loaders.WFS = function(options, viewer)
 {
-	$.ajax(options.url, {
+	return $.ajax(options.url, {
 		type: 'GET',
 		dataType: 'xml',
 		data: {
@@ -70,32 +70,5 @@ Viewer.loaders.WFS = function(options, viewer)
 				return bbox;
 			}).get();
 		}).get();
-
-		// Add a debug map that contains all the extents of the just fetched WFS
-		/*
-		window.layers['FryslanWFS'] = new ol.layer.Vector({
-			id: 'FryslanWFS',
-			name: '#Fryslan WFS extents',
-			source: new ol.source.Vector({
-				features: features,
-				strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({
-					maxZoom: 19
-				})),
-				projection: 'EPSG:28992',
-				attributions: [new ol.Attribution({
-					html: 'Feature boxes'
-				})],
-			}),
-			style: new ol.style.Style({
-				stroke: new ol.style.Stroke({
-					color: 'green',
-					width: 2
-				}),
-				fill: new ol.style.Fill({
-					color: [0, 0, 255, 0.6]
-				})
-			})
-		});
-		*/
 	});
 };
