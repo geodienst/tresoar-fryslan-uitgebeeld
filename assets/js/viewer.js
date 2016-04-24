@@ -694,7 +694,7 @@
 					'type': 'button',
 					'className': 'layer add-layer-button list-group-item',
 					'data-layer-id': this.props.id,
-					'data-tooltip': 'Voeg \'' + this.props.id + '\' toe aan de zichtbare kaarten',
+					'data-tooltip': 'Voeg \'' + this.props.name + '\' toe aan de zichtbare lagen',
 					'data-toggle': 'tooltip',
 					'data-placement': 'right'
 				},

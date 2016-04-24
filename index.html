@@ -42,9 +42,9 @@
 
 		<div id="geocoder">
 			<div class="input-group">
-				<span class="input-group-addon">
+				<label class="input-group-addon" for="address-query">
 					<span class="glyphicon glyphicon-search"></span>
-				</span>
+				</label>
 				<input type="text" id="address-query" class="form-control" data-provider="pdok-geocoder" placeholder="Zoek een adres…">
 			</div>
 		</div>
@@ -393,7 +393,7 @@
 					format: 'image/png',
 					attributions: [
 						new ol.Attribution({
-							html: '<a href="http://www.kadaster.nl" target="_blank">BRT Achtergrond © Kadaster</a>'
+							html: '<a href="http://www.kadaster.nl" target="_blank">Bonnebladen © Kadaster</a>'
 						})
 					],
 					projection: Viewer.EPSG28992,

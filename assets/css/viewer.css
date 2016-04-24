@@ -9,6 +9,10 @@ html, body {
 	overflow: hidden;
 }
 
+.form-control {
+	box-shadow: none;
+}
+
 #map {
 	position: fixed;
 	top: 0;
