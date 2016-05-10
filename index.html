@@ -110,6 +110,8 @@
 
 			var GEOSERVER_TRESOAR = 'https://geoserver.fryslanuitgebeeld.frl/ows';
 
+			var GEOSERVER_TRESOAR_WFS = 'http://geoserver.geodienst.dev/ows';
+
 			var viewer = new Viewer({
 				sources: [
 					{
@@ -298,7 +300,7 @@
 						}
 					},
 					{
-						pattern: /^cite:TEST_1622_1749$/,
+						pattern: /:NAMEN_1622_1749$/,
 						header: function(feature) {
 							return feature.get('txt');
 						},
@@ -314,6 +316,21 @@
 									return $('<p>').text(paragraph.trim());
 								});
 							});
+						}
+					},
+					{
+						pattern: /:kaartnummers$/,
+						header: function(feature) {
+							return feature.get('kaartnr');
+						},
+						content: function(feature) {
+							var link = $('<a>')
+								.attr({
+									href:'http://www.frieskaartenkabinet.nl/en/fries-kaartenkabinet/' + feature.get('kaartnr'),
+									target: '_blank'
+								})
+								.text('Bekijk de kaart in het Fries Kaartenkabinet');
+							return jQuery.Deferred().resolve(link);
 						}
 					}
 				]
@@ -412,9 +429,9 @@
 				})
 			}));
 
-			/*
+			
 			viewer.addLayer(new ol.layer.Vector({
-				id: 'cite:TEST_1622_1749',
+				id: 'tresoarfeatures:NAMEN_1622_1749',
 				name: 'Huisnamen',
 				extent: [162260.09673250082, 541812.210502058,
 					197949.28417707223, 592629.1556384563],
@@ -422,13 +439,13 @@
 					distance: 40,
 					source: new ol.source.Vector({
 						loader: function(extent, resolution, projection) {
-							$.ajax('http://geoserver.geodienst.dev/ows', {
+							$.ajax(GEOSERVER_TRESOAR_WFS, {
 								type: 'GET',
 								data: {
 									service: 'WFS',
 									version: '1.0.0',
 									request: 'GetFeature',
-									typename: 'cite:TEST_1622_1749',
+									typename: 'tresoarfeatures:NAMEN_1622_1749',
 									srsname: 'EPSG:28992', // todo: get this info from $feature?
 									bbox: extent.join(',')
 								}
@@ -437,9 +454,7 @@
 								this.addFeatures(format.readFeatures(data));
 							}.bind(this));
 						},
-						strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({
-							maxZoom: 19
-						})),
+						loadingstrategy: ol.loadingstrategy.all,
 						projection: 'EPSG:28992'
 					}),
 				}),
@@ -462,7 +477,53 @@
 					});
 				}
 			}));
-			*/
+			
+			viewer.addLayer(new ol.layer.Vector({
+				id: 'tresoarfeatures:kaartnummers',
+				name: 'Fries Kaartenkabinet',
+				extent: [162260.09673250082, 541812.210502058,
+					197949.28417707223, 592629.1556384563],
+				source: new ol.source.Cluster({
+					distance: 40,
+					source: new ol.source.Vector({
+						loader: function(extent, resolution, projection) {
+							$.ajax(GEOSERVER_TRESOAR_WFS, {
+								type: 'GET',
+								data: {
+									service: 'WFS',
+									version: '1.0.0',
+									request: 'GetFeature',
+									typename: 'tresoarfeatures:kaartnummers',
+									srsname: 'EPSG:28992', // todo: get this info from $feature?
+									bbox: extent.join(',')
+								}
+							}).done(function(data) {
+								var format = new ol.format.GML2();
+								this.addFeatures(format.readFeatures(data));
+							}.bind(this));
+						},
+						projection: 'EPSG:28992'
+					}),
+				}),
+				style: function(feature, resolution) {
+					var size = feature.get('features').length;
+					return new ol.style.Style({
+						geometry: new ol.geom.Circle(feature.getGeometry().getCoordinates(), resolution * 10),
+						stroke: new ol.style.Stroke({
+							color: '#fff'
+						}),
+						fill: new ol.style.Fill({
+							color: '#9933CC'
+						}),
+						text: new ol.style.Text({
+							text: size.toString(),
+							fill: new ol.style.Fill({
+								color: '#fff'
+							})
+						})
+					});
+				}
+			}));
 
 			viewer.addLayer(new ol.layer.Vector({
 				id: 'PGR:CHK2_StinzenStates',
