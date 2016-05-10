@@ -18,7 +18,7 @@
 	ol.proj.addProjection(EPSG28992);
 
 	var projectionExtent = [-285401.92,22598.08,595401.9199999999,903401.9199999999];
-	var resolutions = [3440.64, 1720.32, 860.16, 430.08, 215.04, 107.52, 53.76, 26.88, 13.44, 6.72, 3.36, 1.68, 0.84, 0.42, 0.21];
+	var resolutions = [3440.64, 1720.32, 860.16, 430.08, 215.04, 107.52, 53.76, 26.88, 13.44, 6.72, 3.36, 1.68, 0.84, 0.42, 0.21, 0.105, 0.0525, 0.02625, 0.013125];
 	//var size = ol.extent.getWidth(projectionExtent) / 256;
 	
 	Viewer.EPSG28992 = EPSG28992;
@@ -28,7 +28,8 @@
 	Viewer.EPSG28992.tileGrid = new ol.tilegrid.WMTS({
 		origin: ol.extent.getTopLeft(projectionExtent),
 		resolutions: resolutions,
-		matrixIds: resolutions.map(function(resolution, index) { return 'EPSG:28992:' + index; })
+		matrixIds: resolutions.map(function(resolution, index) { return 'EPSG:28992:' + index; }),
+		tileSize: [256, 256]
 	});
 
 	var geodienstAttribution = new ol.Attribution({
@@ -93,7 +94,7 @@
 				projection: EPSG28992,
 				center: [194898.97512816024, 572819.4255151745], // Center on Fryslân!
 				extent: [7624.23727, 305942.69072, 285769.01916, 625595.51780], // OpenTopo extent
-				maxZoom: 19,
+				maxZoom: 18,
 				minZoom: 8,
 				zoom: 10.5
 			}),
@@ -107,7 +108,9 @@
 						this.updateElement_(mapEvent.frameState);
 					}
 				}
-			})
+			}).extend([
+				new ol.control.ScaleLine()
+			])
 		});
 
 		// Update the layer list every time a layer is enabled or disabled
