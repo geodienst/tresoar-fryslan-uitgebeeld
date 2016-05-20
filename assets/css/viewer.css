@@ -318,3 +318,7 @@ body.dragging, body.dragging * {
 #feature-selection-menu {
 	position: static;
 }
+
+.tt-selectable {
+	cursor: pointer;
+}
