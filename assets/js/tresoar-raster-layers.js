@@ -75,7 +75,7 @@ Viewer.loaders.WMS = function(options, viewer) {
 						LAYERS: name,
 						TILED: true,
 						TRANSPARENT: false,
-						FORMAT: 'image/png',
+						FORMAT: 'image/jpeg',
 						SRS: 'EPSG:28992'
 					},
 					projection: Viewer.EPSG28992,
