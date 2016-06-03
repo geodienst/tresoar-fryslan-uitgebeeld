@@ -29,7 +29,7 @@
 		origin: ol.extent.getTopLeft(projectionExtent),
 		resolutions: resolutions,
 		matrixIds: resolutions.map(function(resolution, index) { return 'EPSG:28992:' + index; }),
-		tileSize: [256, 256]
+		tileSize: [512, 512]
 	});
 
 	var geodienstAttribution = new ol.Attribution({

@@ -345,6 +345,7 @@
 					layer: 'brtachtergrondkaart',
 					matrixSet: 'EPSG:28992',
 					format: 'image/png',
+					crossOrigin: 'anonymous',
 					attributions: [
 						new ol.Attribution({
 							html: '<a href="http://www.kadaster.nl" target="_blank">BRT Achtergrond © Kadaster</a>'
@@ -363,6 +364,7 @@
 					url: 'https://services.arcgisonline.nl/arcgis/rest/services/Basiskaarten/Open_Topo/MapServer',
 					layer: 'Basiskaarten_Open_Topo',
 					matrixSet: 'EPSG:28992',
+					crossOrigin: 'anonymous',
 					params: {
 						FORMAT: 'jpg'
 					},
@@ -387,6 +389,7 @@
 					layer: 'luchtfoto',
 					matrixSet: 'nltilingschema',
 					format: 'image/jpeg',
+					crossOrigin: 'anonymous',
 					style: '',
 					attributions: [
 						new ol.Attribution({
@@ -412,6 +415,7 @@
 				extent: Viewer.EPSG28992.extent,
 				source: new ol.source.TileWMS({
 					url: 'https://geo.rug.nl/arcgis/services/HistorischeKaarten/Bonnebladen/ImageServer/WMSServer',
+					crossOrigin: 'anonymous',
 					attributions: [
 						new ol.Attribution({
 							html: '<a href="http://www.kadaster.nl" target="_blank">Bonnebladen © Kadaster</a>'

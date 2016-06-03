@@ -47,8 +47,7 @@ Viewer.loaders.WMS = function(options, viewer) {
 			var name = getChildNodesByTagName(layer, 'Name')[0].textContent;
 			var title = getChildNodesByTagName(layer, 'Title')[0].textContent;
 
-			// Ugly side-effect implementation
-			viewer.addLayer(new ol.layer.Tile({
+			var layer = new ol.layer.Tile({
 				id: name,
 				name: title,
 				extent: extent,
@@ -71,6 +70,7 @@ Viewer.loaders.WMS = function(options, viewer) {
 				source: new ol.source.TileWMS({
 					url: options.url,
 					attributions: options.attributions,
+					crossOrigin: 'anonymous',
 					params: {
 						LAYERS: name,
 						TILED: true,
@@ -81,7 +81,39 @@ Viewer.loaders.WMS = function(options, viewer) {
 					projection: Viewer.EPSG28992,
 					tileGrid: Viewer.EPSG28992.tileGrid
 				})
-			}));
+			});
+
+			var prePixels;
+
+			layer.on('precompose', function(evt) {
+				// Store pixels before drawing
+				prePixels = evt.context.getImageData(0, 0,
+					evt.context.canvas.width,
+					evt.context.canvas.height).data;
+			});
+
+			layer.on('postcompose', function(evt) {
+				var img = evt.context.getImageData(0, 0,
+					evt.context.canvas.width,
+					evt.context.canvas.height);
+				var pixels = img.data;
+				for (var i = 0, n = pixels.length; i <n; i += 4) {
+					var r = pixels[i], g = pixels[i+1], b = pixels[i+2];
+					// make white pixels transparent
+					// Difficult due to jpeg artifacts :(
+					if (r > 250 && g > 250 && b > 250) {
+						pixels[i] = prePixels[i];
+						pixels[i+1] = prePixels[i+1];
+						pixels[i+2] = prePixels[i+2];
+						pixels[i+3] = prePixels[i+3];
+					}
+				}
+				prePixels = null;
+				evt.context.putImageData(img, 0, 0);
+			});
+
+			// Ugly side-effect implementation
+			viewer.addLayer(layer);
 
 			return bbox;
 		});
