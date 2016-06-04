@@ -79,38 +79,46 @@ Viewer.loaders.WMS = function(options, viewer) {
 						SRS: 'EPSG:28992'
 					},
 					projection: Viewer.EPSG28992,
-					tileGrid: Viewer.EPSG28992.tileGrid
+					tileGrid: Viewer.EPSG28992.tileGrid,
+					tileLoadFunction: function(imageTile, src) {
+						var image = new Image();
+						image.crossOrigin = 'anonymous';
+						image.onload = function() {
+							var canvas = document.createElement('canvas');
+							canvas.width = image.width;
+							canvas.height = image.height;
+
+							var context = canvas.getContext('2d');
+							context.drawImage(image, 0, 0);
+
+							var imageData = context.getImageData(0, 0, image.width, image.height);
+							var pixels = imageData.data;
+
+							for (var i = 0, n = pixels.length; i <n; i += 4) {
+								var r = pixels[i], g = pixels[i+1], b = pixels[i+2];
+								// Make white pixels transparent. Difficult due to jpeg artifacts :(
+								// TODO: Replace this with some form of flood fill and tolerance
+								// but take into account that we may not be at an edge tile!
+								if (r > 250 && g > 250 && b > 250) {
+									pixels[i+3] = 0;
+								}
+							}
+
+							context.putImageData(imageData, 0, 0);
+
+							imageTile.getImage().src = canvas.toDataURL('image/png');
+						};
+
+						// Start loading the source image
+						image.src = src;
+					}
 				})
 			});
 
-			var prePixels;
-
-			layer.on('precompose', function(evt) {
-				// Store pixels before drawing
-				prePixels = evt.context.getImageData(0, 0,
-					evt.context.canvas.width,
-					evt.context.canvas.height).data;
-			});
-
-			layer.on('postcompose', function(evt) {
-				var img = evt.context.getImageData(0, 0,
-					evt.context.canvas.width,
-					evt.context.canvas.height);
-				var pixels = img.data;
-				for (var i = 0, n = pixels.length; i <n; i += 4) {
-					var r = pixels[i], g = pixels[i+1], b = pixels[i+2];
-					// make white pixels transparent
-					// Difficult due to jpeg artifacts :(
-					if (r > 250 && g > 250 && b > 250) {
-						pixels[i] = prePixels[i];
-						pixels[i+1] = prePixels[i+1];
-						pixels[i+2] = prePixels[i+2];
-						pixels[i+3] = prePixels[i+3];
-					}
-				}
-				prePixels = null;
-				evt.context.putImageData(img, 0, 0);
-			});
+			// Even though we pass TRANSPARENT=FALSE, we still want OL to think
+			// of this layer as transparent since we'll be making some of the
+			// pixels transparent :D
+			layer.getSource().opaque_ = false;
 
 			// Ugly side-effect implementation
 			viewer.addLayer(layer);
