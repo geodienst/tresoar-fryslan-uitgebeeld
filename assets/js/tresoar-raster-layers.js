@@ -55,17 +55,9 @@ Viewer.loaders.WMS = function(options, viewer) {
 				thumbnail: options.url + '?' + jQuery.param({
 					service: 'wms',
 					version: '1.3.0',
-					request: 'getMap',
+					request: 'reflect',
 					format: 'image/jpeg',
-					transparent: false,
-					styles: '',
-					layers: name,
-					crs: 'EPSG:28992',
-					srs: 'EPSG:28992',
-					width: Viewer.EPSG28992.tileGrid.getTileSize()[0],
-					height: Viewer.EPSG28992.tileGrid.getTileSize()[1],
-					tiled: true,
-					bbox: bbox.getGeometry().getExtent().join(',')
+					layers: name
 				}),
 				source: new ol.source.TileWMS({
 					url: options.url,
