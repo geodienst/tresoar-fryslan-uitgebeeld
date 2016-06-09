@@ -75,6 +75,9 @@ Viewer.loaders.WMS = function(options, viewer) {
 					tileLoadFunction: function(imageTile, src) {
 						var image = new Image();
 						image.crossOrigin = 'anonymous';
+						
+						image.onerror = imageTile.getImage().onerror;
+
 						image.onload = function() {
 							var canvas = document.createElement('canvas');
 							canvas.width = image.width;
