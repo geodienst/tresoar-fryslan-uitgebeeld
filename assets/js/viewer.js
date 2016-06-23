@@ -124,9 +124,9 @@
 		this.map.getLayers().on('remove', this.triggerUpdateLayerList.bind(this));
 
 		// Update the state encoded in the current URL
-		var updatePermalink = throttle(this.updatePermalink.bind(this), 250);
-		this.map.getLayers().on(['add', 'remove'], updatePermalink);
-		this.map.getView().on(['change:center', 'change:resolution'], updatePermalink);
+		this._updatePermalink = throttle(this.updatePermalink.bind(this), 250);
+		this.map.getLayers().on(['add', 'remove'], this._updatePermalink);
+		this.map.getView().on(['change:center', 'change:resolution'], this._updatePermalink);
 		
 		this.$activeLayers = $('#active-layers');
 
@@ -385,16 +385,17 @@
 	};
 
 	Viewer.prototype.addLayer = function(layer) {
+		layer.on(['change:zIndex', 'change:opacity'], this._updatePermalink);
 		this.layers[layer.get('id')] = layer;
 		this.scheduleUpdateLayerList();
 	}
 
 	Viewer.prototype.updateLayerZOrder = function() {
-		var self = this;
+		var viewer = this;
 		var $layers = this.$activeLayers.find('.layer');
 		$layers
 			.map(function() { return $(this).prop('data-layer-id'); })
-			.each(function(i) { self.layers[this].setZIndex($layers.length - 1 - i); });
+			.each(function(i) { viewer.layers[this].setZIndex($layers.length - 1 - i); });
 	};
 
 	Viewer.prototype.layerFilter = function(layer) {
