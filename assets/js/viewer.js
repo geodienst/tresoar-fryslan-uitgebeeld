@@ -19,7 +19,6 @@
 
 	var projectionExtent = [-285401.92,22598.08,595401.9199999999,903401.9199999999];
 	var resolutions = [3440.64, 1720.32, 860.16, 430.08, 215.04, 107.52, 53.76, 26.88, 13.44, 6.72, 3.36, 1.68, 0.84, 0.42, 0.21, 0.105, 0.0525, 0.02625, 0.013125];
-	//var size = ol.extent.getWidth(projectionExtent) / 256;
 	
 	Viewer.EPSG28992 = EPSG28992;
 
@@ -30,6 +29,13 @@
 		resolutions: resolutions,
 		matrixIds: resolutions.map(function(resolution, index) { return 'EPSG:28992:' + index; }),
 		tileSize: [512, 512]
+	});
+
+	Viewer.EPSG28992.tileGrid256 = new ol.tilegrid.WMTS({
+		origin: ol.extent.getTopLeft(projectionExtent),
+		resolutions: resolutions,
+		matrixIds: resolutions.map(function(resolution, index) { return 'EPSG:28992:' + index; }),
+		tileSize: [256, 256]
 	});
 
 	var geodienstAttribution = new ol.Attribution({
