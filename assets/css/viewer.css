@@ -53,33 +53,33 @@ html, body {
 
 #layers .back-button {
 	display: block;
-		line-height: 13px;
-		padding-top: 8px;
-		padding-left: 15px;
-		background: linear-gradient(to bottom,#199713,#3aaa35);
-		color: white;
-		height: 42px;
-		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		white-space: nowrap;
+	line-height: 13px;
+	padding-top: 8px;
+	padding-left: 15px;
+	background: linear-gradient(to bottom,#199713,#3aaa35);
+	color: white;
+	height: 42px;
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	white-space: nowrap;
 }
 
 #layers .back-button:hover {
-		text-decoration: none;
-		background: rgb(58, 170, 53);
+	text-decoration: none;
+	background: rgb(58, 170, 53);
 }
 
 #layers .back-button .website-title {
-		display: block;
-		font-size: 14px;
+	display: block;
+	font-size: 14px;
 }
 
 #layers .back-button .glyphicon {
-		float: left;
-		line-height: 20px;
-		margin-right: 15px;
+	float: left;
+	line-height: 20px;
+	margin-right: 15px;
 }
 
 #layers .layer-list {
@@ -93,18 +93,18 @@ html, body {
 }
 
 #layers h4 {
-		font-size: 1em;
-		padding: 0 15px;
-		line-height: 2em;
-		background: #eee;
-		margin: 0;
-		border-bottom: 1px solid #ccc;
+	font-size: 1em;
+	padding: 0 15px;
+	line-height: 2em;
+	background: #eee;
+	margin: 0;
+	border-bottom: 1px solid #ccc;
 }
 
 #layers h4 .layer-group-count.badge {
-		margin-left: 4px;
-		margin-top: -2px;
-		background-color: #999;
+	margin-left: 4px;
+	margin-top: -2px;
+	background-color: #999;
 }
 
 #layers .layer-group[data-collapsed=collapsed] .layers {
@@ -113,11 +113,11 @@ html, body {
 
 #layers h4 .group-toggle {
 	display: inline-block;
-		background: none;
-		border: none;
-		float: right;
-		margin: 0;
-		padding: 0;
+	background: none;
+	border: none;
+	float: right;
+	margin: 0;
+	padding: 0;
 }
 
 #layers .layer-group[data-collapsed=collapsed] h4 .group-toggle .glyphicon::before {
@@ -150,7 +150,7 @@ html, body {
 }
 
 #layers .list-group {
-		margin-bottom: 0;
+	margin-bottom: 0;
 }
 
 #layers .list-group > .list-group-item {
@@ -158,7 +158,7 @@ html, body {
 	border-right: none;
 	border-radius: 0;
 	overflow: hidden;
-		white-space: nowrap;
+	white-space: nowrap;
 }
 
 #layers .layer-filter + .list-group > .list-group-item:first-child,
@@ -215,11 +215,12 @@ html, body {
 	border: none;
 }
 
-#layers .layer .layer-name {
-		display: inline-block;
-		max-width: 100%;
-		overflow: hidden;
-		text-overflow: ellipsis;
+#layers .layer .layer-name,
+.layer.dragged .layer-name {
+	display: inline-block;
+	max-width: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 #layers .resize-handle {
@@ -236,6 +237,7 @@ html, body {
 	position: relative;
 	padding-right: 20px;
 	transition: padding-right 200ms;
+	cursor: move;
 }
 
 #active-layers .layer .remove-layer-button {
@@ -265,30 +267,47 @@ body.dragging, body.dragging * {
 	cursor: move !important;
 }
 
-.dragged {
+.layer.dragged {
 	position: absolute;
-	opacity: 0.5;
+	opacity: 0.75;
+	box-shadow: 1px 1px 20px #ccc;
 	z-index: 2000;
+	padding-bottom: 10px;
+	padding-left: 15px;
+	padding-right: 20px;
+	padding-top: 10px;
+	background: white;
+	font-size: 12px;
+	border-radius: 0;
+}
+
+.layer.dragged .remove-layer-button {
+	display: none;
 }
 
 .layers li.placeholder {
 	position: relative;
-	/** More li styles **/
+	margin: 0;
+	height: 0;
+	border-top: 2px solid #000;
 }
+
 .layers li.placeholder:before {
 	position: absolute;
 	content: "";
 	width: 0;
 	height: 0;
 	margin-top: -5px;
-	left: -5px;
-	top: -4px;
-	border: 5px solid transparent;
+	left: 0;
+	top: -2px;
+	border: 6px solid transparent;
 	border-left-color: black;
 	border-right: none;
+	z-index: 100;
 }
 
 /* Feature popup */
+
 #feature-popup {
 	max-width: 50vw;
 	position: relative;
@@ -330,52 +349,55 @@ body.dragging, body.dragging * {
 input[type=range] {
 	-webkit-appearance: none;
 	width: 100%;
+	height: 22px;
 	margin: 5.55px 0;
+	cursor: pointer;
 }
+
 input[type=range]:focus {
 	outline: none;
 }
+
 input[type=range]::-webkit-slider-runnable-track {
 	width: 100%;
 	height: 6.9px;
 	cursor: pointer;
-	box-shadow: 0px 0px 0px #000000, 0px 0px 0px #0d0d0d;
 	background: rgba(48, 113, 169, 0.78);
 	border-radius: 12px;
-	border: 0px solid rgba(1, 1, 1, 0);
 }
+
 input[type=range]::-webkit-slider-thumb {
-	box-shadow: 0px 0px 0px #000031, 0px 0px 0px #00004b;
-	border: 2px solid #00001e;
+	border: 2px solid #333;
 	height: 18px;
 	width: 18px;
-	border-radius: 9px;
-	background: #ffffff;
+	border-radius: 10px;
+	background: #fff;
 	cursor: pointer;
 	-webkit-appearance: none;
 	margin-top: -5.55px;
 }
+
 input[type=range]:focus::-webkit-slider-runnable-track {
 	background: rgba(110, 166, 214, 0.78);
 }
+
 input[type=range]::-moz-range-track {
 	width: 100%;
 	height: 6.9px;
 	cursor: pointer;
-	box-shadow: 0px 0px 0px #000000, 0px 0px 0px #0d0d0d;
 	background: rgba(48, 113, 169, 0.78);
 	border-radius: 12px;
-	border: 0px solid rgba(1, 1, 1, 0);
 }
+
 input[type=range]::-moz-range-thumb {
-	box-shadow: 0px 0px 0px #000031, 0px 0px 0px #00004b;
-	border: 2px solid #00001e;
+	border: 2px solid #333;
 	height: 18px;
 	width: 18px;
-	border-radius: 9px;
-	background: #ffffff;
+	border-radius: 10px;
+	background: #fff;
 	cursor: pointer;
 }
+
 input[type=range]::-ms-track {
 	width: 100%;
 	height: 6.9px;
@@ -384,31 +406,31 @@ input[type=range]::-ms-track {
 	border-color: transparent;
 	color: transparent;
 }
+
 input[type=range]::-ms-fill-lower {
 	background: rgba(24, 57, 86, 0.78);
-	border: 0px solid rgba(1, 1, 1, 0);
 	border-radius: 24px;
-	box-shadow: 0px 0px 0px #000000, 0px 0px 0px #0d0d0d;
 }
+
 input[type=range]::-ms-fill-upper {
 	background: rgba(48, 113, 169, 0.78);
-	border: 0px solid rgba(1, 1, 1, 0);
 	border-radius: 24px;
-	box-shadow: 0px 0px 0px #000000, 0px 0px 0px #0d0d0d;
 }
+
 input[type=range]::-ms-thumb {
-	box-shadow: 0px 0px 0px #000031, 0px 0px 0px #00004b;
-	border: 2px solid #00001e;
-	height: 18px;
-	width: 18px;
-	border-radius: 9px;
-	background: #ffffff;
+	border: 2px solid #333;
+	height: 16px;
+	width: 16px;
+	border-radius: 10px;
+	margin: 0;
+	background: #fff;
 	cursor: pointer;
-	height: 6.9px;
 }
+
 input[type=range]:focus::-ms-fill-lower {
 	background: rgba(48, 113, 169, 0.78);
 }
+
 input[type=range]:focus::-ms-fill-upper {
 	background: rgba(110, 166, 214, 0.78);
 }

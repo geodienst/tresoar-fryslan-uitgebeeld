@@ -151,21 +151,33 @@
 			// set $item relative to cursor position
 			onDragStart: function ($item, container, _super) {
 				var pointer = container.rootGroup.pointer;
-
+				var position  = $item.offset();
 				adjustment = {
-					left: pointer.left,
-					top: pointer.top
+					left: pointer.left - position.left,
+					top: pointer.top - position.top
 				};
+
+				$item.css({
+					width: $item.outerWidth(),
+					height: $item.outerHeight()
+				});
+
+				$item.appendTo(document.body);
 
 				_super($item, container);
 			},
 			onDrag: function ($item, position) {
 				$item.css({
 					left: position.left - adjustment.left,
-					top: position.top - adjustment.top
+					top: position.top - adjustment.top,
 				});
 			},
 			onDrop: function($item, container, _super) {
+				// $item.appendTo(container);
+				$item.css({
+					width: null,
+					height: null
+				});
 				viewer.updateLayerZOrder();
 				_super($item, container);
 			},
