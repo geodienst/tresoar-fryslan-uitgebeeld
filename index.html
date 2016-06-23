@@ -370,7 +370,7 @@
 					},
 					attributions: [
 						new ol.Attribution({
-							html: '<a href="http://www.imergis.nl/" target="_blank">OpenTopo © Jan-Willem van Aalst</a>, <a href="http://esri.nl/" target="_blank">Esri Nederland</a>'
+							html: '<a href="http://www.imergis.nl/" target="_blank">OpenTopo © J.W. van Aalst</a>, <a href="http://www.opentopo.nl" target="_blank">OpenTopo.nl</a>'
 						})
 					]
 				})
@@ -548,7 +548,7 @@
 					},
 					attributions: [
 						new ol.Attribution({
-							html: '<a href="http://www.fryslan/" target="_blank">CHK2 © Provincie Fryslân</a>'
+							html: '<a href="http://www.fryslan.frl/" target="_blank">States &amp; Stinzen © Provincie Fryslân</a>'
 						})
 					],
 					strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({
@@ -619,6 +619,11 @@
 								this.addFeatures(format.readFeatures(data));
 							}.bind(this));
 						},
+						attributions: [
+							new ol.Attribution({
+								html: '<a href="http://www.cultureelerfgoed.nl/" target="_blank">Rijksmonumenten © <abbr title="Rijksdienst voor het Cultureel Erfgoed">RCE</abbr></a>'
+							})
+						],
 						strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({
 							maxZoom: 19
 						})),
@@ -667,7 +672,7 @@
 					},
 					attributions: [
 						new ol.Attribution({
-							html: '<a href="http://cultureelerfgoed.nl" target="_blank">Buitenplaatsen © Rijksdienst voor het Cultureel Erfgoed</a>'
+							html: '<a href="http://www.cultureelerfgoed.nl/" target="_blank">Rijksmonumenten © <abbr title="Rijksdienst voor het Cultureel Erfgoed">RCE</abbr></a>'
 						})
 					],
 					strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({
