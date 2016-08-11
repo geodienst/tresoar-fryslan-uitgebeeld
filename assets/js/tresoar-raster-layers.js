@@ -62,7 +62,7 @@ Viewer.loaders.WMS = function(options, viewer) {
 				source: new ol.source.TileWMS({
 					url: options.url,
 					attributions: options.attributions,
-					crossOrigin: 'anonymous',
+					// crossOrigin: 'anonymous', // Safari does not like this. We fall back to this when setting fails for Chrome etc.
 					params: {
 						LAYERS: name,
 						TILED: true,
@@ -100,8 +100,15 @@ Viewer.loaders.WMS = function(options, viewer) {
 							}
 
 							context.putImageData(imageData, 0, 0);
+							var dataURL = canvas.toDataURL('image/png');
 
-							imageTile.getImage().src = canvas.toDataURL('image/png');
+							try {
+								imageTile.getImage().src = dataURL;
+							} catch (e) {
+								// fall back to anonymous if setting url fails otherwise.
+								imageTile.getImage().crossOrigin = 'anonymous';
+								imageTile.getImage().src = dataURL;
+							}
 						};
 
 						// Start loading the source image
