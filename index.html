@@ -806,6 +806,16 @@
 						break;
 				}
 
+				viewer.map.beforeRender(ol.animation.pan({
+					duration: viewer.animationDuration,
+					source: viewer.map.getView().getCenter()
+				}));
+
+				viewer.map.beforeRender(ol.animation.zoom({
+					duration: viewer.animationDuration,
+					resolution: viewer.map.getView().getResolution()
+				}));
+
 				viewer.map.getView().fit(
 					new ol.geom.Point(address.pos.split(/\s/).map(parseFloat)),
 					viewer.map.getSize(),

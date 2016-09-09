@@ -59,8 +59,8 @@
 		// FIXME it would be more awesome if we could retrieve this list (excl the base layers)
 		// from Geoserver directly (through GetCapabilities?)
 
-		// Could we then also access the extents of each layer? Then we can filter the list by
-		// intersecting those with the current view extents.
+		this.animationDuration = 300;
+
 		this.layers = {};
 
 		this.layerExtents = {};
@@ -739,12 +739,12 @@
 		};
 
 		this.map.beforeRender(ol.animation.pan({
-			duration: 300,
+			duration: this.animationDuration,
 			source: this.map.getView().getCenter()
 		}));
 
 		this.map.beforeRender(ol.animation.zoom({
-			duration: 300,
+			duration: this.animationDuration,
 			resolution: this.map.getView().getResolution()
 		}));
 		
@@ -760,7 +760,7 @@
 					this.hideFeaturePopup();
 				}
 			}.bind(this));
-		}.bind(this), 350);
+		}.bind(this), this.animationDuration + 50);
 		
 		// Zoom & pan to the feature
 		this.map.getView().fit(feature.feature.getGeometry(), this.map.getSize(), {
@@ -778,24 +778,23 @@
 		// Animate the reset of the resolution
 		if (this.prePopupState)
 		{
-			this.map.beforeRender(ol.animation.pan({
-	  			duration: 300,
-	  			source: this.map.getView().getCenter()
-	  		}));
+			// Saving a local copy, because as soon as we start panning,
+			// the reset listener is called and prePopupState is gone!
+			var prePopupState = this.prePopupState;
+			this.prePopupState = null;
 
-	  		this.map.beforeRender(ol.animation.zoom({
-				duration: 300,
+			this.map.beforeRender(ol.animation.pan({
+				duration: this.animationDuration,
+				source: this.map.getView().getCenter()
+			}));
+
+			this.map.beforeRender(ol.animation.zoom({
+				duration: this.animationDuration,
 				resolution: this.map.getView().getResolution()
 			}));
 
-	  		// Saving a local copy, because as soon as we start panning,
-	  		// the reset listener is called and prePopupState is gone!
-			var prePopupState = this.prePopupState;
-
-	  		this.map.getView().setCenter(prePopupState.center);
-	  		this.map.getView().setResolution(prePopupState.resolution);
-	  		
-	  		this.prePopupState = null;
+			this.map.getView().setCenter(prePopupState.center);
+			this.map.getView().setResolution(prePopupState.resolution);
 		}
 	};
 
