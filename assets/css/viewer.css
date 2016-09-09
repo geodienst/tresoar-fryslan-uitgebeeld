@@ -312,8 +312,17 @@ body.dragging, body.dragging * {
 /* Feature popup */
 
 #feature-popup {
-	max-width: 50vw;
-	position: relative;
+	position: absolute;
+	display: none;
+	height: auto;
+	box-sizing: border-box;
+	top: 55px;
+	right: 10px;
+	bottom: 10px;
+	left: auto;
+	z-index: 1;
+	max-width: calc(100% - 300px);
+	width: 50vw;
 }
 
 #feature-popup button.close {
@@ -327,8 +336,10 @@ body.dragging, body.dragging * {
 }
 
 #feature-popup .popover-content {
-	max-height: 80vh;
 	overflow-y: auto;
+	position: absolute;
+	top: 33px;
+	bottom: 0;
 }
 
 #feature-popup th {

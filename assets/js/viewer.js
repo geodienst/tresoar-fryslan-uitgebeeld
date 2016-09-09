@@ -281,16 +281,10 @@
 		});
 
 		// Feature popup
-		this.popup = new ol.Overlay({
-			element: $('#feature-popup').detach().get(0),
-			positioning: 'center-left',
-			stopEvent: true
-		});
-
-		this.map.addOverlay(this.popup);
+		this.popup = $('#feature-popup');
 
 		// Enable the close button of the popup
-		$(this.popup.getElement()).find('.close').on('click', function(e) {
+		this.popup.find('.close').on('click', function(e) {
 			e.preventDefault();
 			viewer.hideFeaturePopup();
 		});
@@ -717,9 +711,11 @@
 			return new RegExp(property_set.pattern).test(feature.layer.get('id'));
 		}) || this.defaultFeatureFilter;
 
-		var $popup = $(this.popup.getElement());
+		var $popup = this.popup;
 		$popup.addClass('ui-loading');
 		$popup.find('.popover-title').text(featureFilter.header(feature.feature));
+
+		console.log(feature);
 		
 		featureFilter.content(feature.feature)
 			.always(function() {
@@ -734,14 +730,74 @@
 				$popup.find('.popover-content').append($error);
 			});
 
-		$popup.show();
+		this.popup.show();
+
+		this.prePopupState = {
+			feature: feature,
+			center: this.prePopupState ? this.prePopupState.center : this.map.getView().getCenter(),
+			resolution: this.prePopupState ? this.prePopupState.resolution : this.map.getView().getResolution()
+		};
+
+		this.map.beforeRender(ol.animation.pan({
+			duration: 300,
+			source: this.map.getView().getCenter()
+		}));
+
+		this.map.beforeRender(ol.animation.zoom({
+			duration: 300,
+			resolution: this.map.getView().getResolution()
+		}));
 		
-		this.popup.setPosition(evt.coordinate);
-	}
+		// After the animation, start listening for mapping and panning
+		setTimeout(function(map) {
+			this.map.getView().once(['change:center', 'change:resolution'], function() {
+				// When they do, hide the feature popup, but make sure
+				// that we don't take over control of the panning and zooming.
+				// And to prevent it being called multiple times, only reset if we're
+				// resetting from our own feature.
+				if (this.prePopupState && this.prePopupState.feature === feature) {
+					this.prePopupState = null;
+					this.hideFeaturePopup();
+				}
+			}.bind(this));
+		}.bind(this), 350);
+		
+		// Zoom & pan to the feature
+		this.map.getView().fit(feature.feature.getGeometry(), this.map.getSize(), {
+			maxZoom: 16,
+			padding: [50, this.popup.width(), 10, 10]
+		});
+	};
 
 	Viewer.prototype.hideFeaturePopup = function() {
-		$(this.popup.getElement()).hide();
-	}
+		if (!this.popup.is(':visible'))
+			return;
+
+		this.popup.hide();
+
+		// Animate the reset of the resolution
+		if (this.prePopupState)
+		{
+			this.map.beforeRender(ol.animation.pan({
+	  			duration: 300,
+	  			source: this.map.getView().getCenter()
+	  		}));
+
+	  		this.map.beforeRender(ol.animation.zoom({
+				duration: 300,
+				resolution: this.map.getView().getResolution()
+			}));
+
+	  		// Saving a local copy, because as soon as we start panning,
+	  		// the reset listener is called and prePopupState is gone!
+			var prePopupState = this.prePopupState;
+
+	  		this.map.getView().setCenter(prePopupState.center);
+	  		this.map.getView().setResolution(prePopupState.resolution);
+	  		
+	  		this.prePopupState = null;
+		}
+	};
 
 	Viewer.prototype.showFeatureSelector = function(features, evt) {
 		$(this.featureSelectionMenu.getElement())
