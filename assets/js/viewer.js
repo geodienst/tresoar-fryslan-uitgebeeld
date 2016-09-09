@@ -63,6 +63,8 @@
 		// intersecting those with the current view extents.
 		this.layers = {};
 
+		this.layerExtents = {};
+
 		this.map = new ol.Map({
 			layers: [
 				new ol.layer.Vector({
@@ -214,9 +216,10 @@
 		$('#layers').on('click', '.add-layer-button', function(e) {
 			var layerId = $(this).attr('data-layer-id');
 			var layer = viewer.layers[layerId];
+
 			// Remove the bounding box overlay if that is still shown
-			if (layer.get('bbox'))
-				viewer.featureOverlay.getSource().removeFeature(layer.get('bbox'));
+			if (viewer.layerExtents[layerId] !== undefined)
+				viewer.featureOverlay.getSource().removeFeature(viewer.layerExtents[layerId]);
 
 			// Move the layer to the top
 			layer.setZIndex(viewer.map.getLayers().getArray().length);
@@ -229,8 +232,8 @@
 		$('#layers').on('click', '.remove-layer-button', function(e) {
 			var layerId = $(this).closest('.layer').attr('data-layer-id');
 			var layer = viewer.layers[layerId];
-			if (layer.get('bbox'))
-				viewer.featureOverlay.getSource().removeFeature(layer.get('bbox'));
+			if (viewer.layerExtents[layerId] !== undefined)
+				viewer.featureOverlay.getSource().removeFeature(viewer.layerExtents[layerId]);
 			viewer.map.removeLayer(layer);
 		});
 
@@ -244,17 +247,15 @@
 		$('#layers').on('mouseover', '.layer', function(e) {
 			var layerId = $(this).attr('data-layer-id');
 			var layer = viewer.layers[layerId];
-			if (layer.get('bbox')) {
-				viewer.featureOverlay.getSource().addFeature(layer.get('bbox'));
-			}
+			if (viewer.layerExtents[layerId] !== undefined)
+				viewer.featureOverlay.getSource().addFeature(viewer.layerExtents[layerId]);
 		});
 
 		$('#layers').on('mouseout', '.layer', function(e) {
 			var layerId = $(this).attr('data-layer-id');
 			var layer = viewer.layers[layerId];
-			if (layer.get('bbox') !== undefined && viewer.featureOverlay.getSource().getFeatures().indexOf(layer.get('bbox')) !== -1) {
-				viewer.featureOverlay.getSource().removeFeature(layer.get('bbox'));
-			}
+			if (viewer.layerExtents[layerId] !== undefined)
+				viewer.featureOverlay.getSource().removeFeature(viewer.layerExtents[layerId]);
 		});
 
 		var groupCollapsed = {};
@@ -392,6 +393,10 @@
 	Viewer.prototype.addLayer = function(layer) {
 		layer.on(['change:zIndex', 'change:opacity'], this._updatePermalink);
 		this.layers[layer.get('id')] = layer;
+
+		if (this.layerExtents[layer.get('id')] === undefined)
+			this.layerExtents[layer.get('id')] = layer.get('bbox');
+
 		this.scheduleUpdateLayerList();
 	}
 
@@ -544,7 +549,7 @@
 				return prev;
 
 			// Otherwise add map to the combined groups element
-			if (!(group.name in prev))
+			if (prev[group.name] === undefined)
 				prev[group.name] = {
 					name: group.name,
 					layers: [current]
@@ -671,7 +676,7 @@
 			var props = feature.getProperties();
 			var options = ['naam', 'name'];
 			for (var i = 0; i < options.length; ++i) {
-				if (options[i] in props) {
+				if (props[options[i]] !== undefined) {
 					return props[options[i]];
 				}
 			}
@@ -750,7 +755,13 @@
 
 	Viewer.prototype.hideFeatureSelector = function() {
 		$(this.featureSelectionMenu.getElement()).hide();
-	}
+	};
+
+	Viewer.prototype.addLayerExtents = function(features) {
+		features.forEach(function(feature) {
+			this.layerExtents[feature.get('layer')] = feature;
+		}.bind(this));
+	};
 
 		
 
@@ -877,7 +888,7 @@
 			}
 		});
 
-		if ('layerPanelWidth' in window.localStorage)
+		if (window.localStorage['layerPanelWidth'] !== undefined)
 			setLayerPanelWidth(window.localStorage['layerPanelWidth']);
 	}
 

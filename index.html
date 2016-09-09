@@ -730,6 +730,20 @@
 				})
 			}));
 
+			$.ajax(GEOSERVER_TRESOAR_WFS, {
+				type: 'GET',
+				data: {
+					service: 'WFS',
+					version: '1.0.0',
+					request: 'GetFeature',
+					typename: 'tresoar:extents',
+					srsname: 'EPSG:28992'
+				}
+			}).done(function(data) {
+				var format = new ol.format.GML2();
+				viewer.addLayerExtents(format.readFeatures(data));
+			});
+
 			/*
 			viewer.addLayer(new ol.layer.Image({
 				id: 'PGR:CHK2_Boerderijplaatsen',
