@@ -174,6 +174,10 @@ html, body {
 	z-index: 3;
 }
 
+#layers .btn-default:hover {
+	background: #f5f5f5;
+}
+
 #layers .layer .thumbnail-container {
 	width: 100%;
 	display: block;
@@ -235,30 +239,29 @@ html, body {
 
 #active-layers .layer {
 	position: relative;
-	padding-right: 20px;
-	transition: padding-right 200ms;
+	padding-right: 48px;
 	cursor: move;
 }
 
 #active-layers .layer .remove-layer-button {
 	position: absolute;
-	right: -32px;
+	right: 0;
 	top: 0;
 	bottom: 0;
-	width: 32px;
+	width: 39px;
 	border: none;
-	background: rgba(0,60,136,.7);
-	margin: 0;
+	background: transparent;
+	margin: -1px -1px -1px 0px;
 	padding: 0;
-	transition: right 200ms;
+	border: 1px solid #ccc;
+	border-radius: 0;
 }
 
-#active-layers .layer:hover {
-	padding-right: 48px;
-}
-
-#active-layers .layer:hover .remove-layer-button {
-	right: 0;
+#active-layers .layer .remove-layer-button:hover {
+	/*background: rgba(0,60,136,.7);
+	color: white;*/
+	background: #f5f5f5;
+	border-color: #adadad;
 }
 
 /* Stuff for jQuery sortable */
