@@ -331,6 +331,13 @@ body.dragging, body.dragging * {
 	right: 20px;
 }
 
+#feature-popup .popover-title {
+	text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    padding-right: 40px;
+}
+
 #feature-popup .popover-title:empty {
 	display: none;
 }
@@ -352,8 +359,26 @@ body.dragging, body.dragging * {
 	white-space: pre-wrap;
 }
 
+#feature-popup .frieskaartenkabinet-thumb {
+	float: right;
+	clear: right;
+	margin: 10px 0 10px 10px;
+}
+
+#feature-popup .frieskaartenkabinet-detail-link {
+	float: right;
+	clear: right;
+}
+
 #feature-selection-menu {
 	position: static;
+	max-width: 250px;
+}
+
+#feature-selection-menu li > a {
+	text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
 }
 
 .tt-selectable {

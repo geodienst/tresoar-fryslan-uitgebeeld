@@ -23,6 +23,7 @@
 		<script src="assets/js/viewer.js"></script>
 		<script src="assets/js/tresoar-feature-layers.js"></script>
 		<script src="assets/js/tresoar-raster-layers.js"></script>
+		<script src="assets/js/frieskaartenkabinet.js"></script>
 	</head>
 	<body>
 		<div id="map" class="map"></div>
@@ -112,6 +113,8 @@
 			
 			var GEOSERVER_TRESOAR_WFS = GEOSERVER_TRESOAR;
 
+			var fkk = new FriesKaartenKabinet();
+
 			var viewer = new Viewer({
 				sources: [
 					{
@@ -159,7 +162,7 @@
 					{
 						pattern: /^PGR:CHK2_StinzenStates$/,
 						header: function(feature) {
-							return feature.get('STI_NAAM');
+							return jQuery.Deferred().resolve(feature.get('STI_NAAM'));
 						},
 						content: function(feature) {
 							return jQuery.Deferred().resolve($.map(feature.getProperties(), function(v, k) {
@@ -196,7 +199,7 @@
 					{
 						pattern: /^RCE:Rijksmonumenten$/,
 						header: function(feature) {
-							return feature.get('NAAM') || feature.get('CBSCATEGOR');
+							return jQuery.Deferred().resolve(feature.get('NAAM') || feature.get('CBSCATEGOR'));
 						},
 						content: function(feature) {
 							return jQuery.Deferred().resolve($.map(feature.getProperties(), function(v, k) {
@@ -243,7 +246,7 @@
 					{
 						pattern: /^RCE:Buitenplaatsen$/,
 						header: function(feature) {
-							return feature.get('NAAM');
+							return jQuery.Deferred().resolve(feature.get('NAAM'));
 						},
 						content: function(feature) {
 							return jQuery.Deferred().resolve($.map(feature.getProperties(), function(v, k) {
@@ -302,7 +305,7 @@
 					{
 						pattern: /:NAMEN_1622_1749$/,
 						header: function(feature) {
-							return feature.get('txt');
+							return jQuery.Deferred().resolve(feature.get('txt'));
 						},
 						content: function(feature) {
 							return $.ajax({
@@ -321,16 +324,66 @@
 					{
 						pattern: /:kaartnummers$/,
 						header: function(feature) {
-							return feature.get('kaartnr');
+							return fkk.get(feature.get('kaartnr')).then(function(kaart){
+								return kaart.titel;
+							});
 						},
 						content: function(feature) {
-							var link = $('<a>')
-								.attr({
-									href:'http://www.frieskaartenkabinet.nl/en/fries-kaartenkabinet/' + feature.get('kaartnr'),
-									target: '_blank'
-								})
-								.text('Bekijk de kaart in het Fries Kaartenkabinet');
-							return jQuery.Deferred().resolve(link);
+							return fkk.get(feature.get('kaartnr')).then(function(kaart) {
+								var $div = $('<div>');
+								
+								$('<a>')
+									.addClass('frieskaartenkabinet-detail-link btn btn-default')
+									.prop('target', '_blank')
+									.prop('href', 'http://www.frieskaartenkabinet.nl/nl/fries-kaartenkabinet/' + kaart.slug)
+									.text('Bekijk in het Fries Kaartenkabinet')
+									.appendTo($div);
+
+								if (kaart.image)
+									$('<img>')
+										.addClass('frieskaartenkabinet-thumb img-thumbnail')
+										.attr('src', 'http://www.frieskaartenkabinet.nl' + kaart.image)
+										.appendTo($div);
+
+								var $dl = $('<dl>').appendTo($div);
+
+								if (kaart.titel)
+									$dl.append(
+										$('<dt>').text('Titel'),
+										$('<dd>').text(kaart.titel));
+
+								if (kaart.besch)
+									$dl.append(
+										$('<dt>').text('Beschrijving'),
+										$('<dd>').text(kaart.besch));
+
+								if (kaart.geo)
+									$dl.append(
+										$('<dt>').text('Trefwoord: Geografie'),
+										$('<dd>').text(kaart.geo));
+
+								if (kaart.zaak)
+									$dl.append(
+										$('<dt>').text('Trefwoord: Onderwerp'),
+										$('<dd>').text(kaart.zaak));
+
+								if (kaart.tekenaar)
+									$dl.append(
+										$('<dt>').text('Tekenaar'),
+										$('<dd>').text(kaart.tekenaar));
+
+								if (kaart.graveur)
+									$dl.append(
+										$('<dt>').text('Graveur'),
+										$('<dd>').text(kaart.graveur));
+
+								if (kaart.jaar1)
+									$dl.append(
+										$('<dt>').text('Jaartal'),
+										$('<dd>').text(kaart.jaar1));
+
+								return $div;
+							});
 						}
 					}
 				]

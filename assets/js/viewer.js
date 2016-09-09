@@ -713,10 +713,10 @@
 
 		var $popup = this.popup;
 		$popup.addClass('ui-loading');
-		$popup.find('.popover-title').text(featureFilter.header(feature.feature));
+		featureFilter.header(feature.feature).done(function(title) {
+			$popup.find('.popover-title').text(title);
+		});
 
-		console.log(feature);
-		
 		featureFilter.content(feature.feature)
 			.always(function() {
 				$popup.removeClass('ui-loading');
@@ -803,11 +803,17 @@
 			.empty()
 			.append(
 				$.map(features, (function(feature) {
-					return $('<li>')
-						.append($('<a>')
-								.attr('href', '#')
-								.data('feature', feature)
-								.text(this.getFeatureHeader(feature.feature, feature.layer) || '[Geen label]'));
+					var $a = $('<a>')
+						.attr('href', '#')
+						.data('feature', feature)
+						.text('Loading…');
+					
+					this.getFeatureHeader(feature.feature, feature.layer).done(function(header) {
+						$a.text(header || '[Geen label]');
+						$a.prop('title', header);
+					});
+
+					return $('<li>').append($a);
 				}).bind(this)))
 			.show();
 		this.featureSelectionMenu.setPosition(evt.coordinate);
