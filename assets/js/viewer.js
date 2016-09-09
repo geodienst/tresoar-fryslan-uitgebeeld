@@ -147,7 +147,12 @@
 		var adjustment;
 		$('#active-layers').sortable({
 			group: 'layers',
-
+			onMousedown: function ($item, _super, event) {
+				if (!event.target.nodeName.match(/^(input|select|textarea|button)$/i)) {
+					event.preventDefault()
+					return true
+				}
+			},
 			// set $item relative to cursor position
 			onDragStart: function ($item, container, _super) {
 				var pointer = container.rootGroup.pointer;
@@ -185,7 +190,7 @@
 				return isContainer ? children.join() : parent.attr('data-layer-id');
 			},
 		});
-
+		
 		this.featureOverlay = new ol.layer.Vector({
 			map: this.map,
 			source: new ol.source.Vector({
