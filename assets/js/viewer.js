@@ -505,7 +505,12 @@
 				if (score < 0.1)
 					return null;
 			} else if (layer.getExtent()) {
-				var visibleMapExtent = ol.extent.getIntersection(layer.getExtent(), visibleExtent);
+				var layerExtent = layer.getExtent();
+
+				if (viewer.layerExtents[layer.get('id')] !== undefined)
+					layerExtent = viewer.layerExtents[layer.get('id')].getGeometry().getExtent();
+
+				var visibleMapExtent = ol.extent.getIntersection(layerExtent, visibleExtent);
 
 				// Only show layers that are inside the view
 				if (ol.extent.isEmpty(visibleMapExtent))
