@@ -248,20 +248,8 @@ html, body {
 	right: 0;
 	top: 0;
 	bottom: 0;
-	width: 39px;
-	border: none;
-	background: transparent;
 	margin: -1px -1px -1px 0px;
-	padding: 0;
-	border: 1px solid #ccc;
 	border-radius: 0;
-}
-
-#active-layers .layer .remove-layer-button:hover {
-	/*background: rgba(0,60,136,.7);
-	color: white;*/
-	background: #f5f5f5;
-	border-color: #adadad;
 }
 
 /* Stuff for jQuery sortable */
