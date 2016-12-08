@@ -352,8 +352,7 @@
 			var features = [];
 
 			viewer.map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
-				if (!layer) return;
-
+				if (!layer) return null;
 				// If the feature is a clustering feature which is just a proxy for a
 				// set of real features, add the real features to the list instead of
 				// the cluster.
@@ -490,7 +489,7 @@
 					break;
 			}
 
-			var score = 0;
+			var visibility, coverage, score = 0;
 
 			if (query != '') {
 				score = layer.get('name').score(query, 0.3);
@@ -501,22 +500,23 @@
 			} else if (layer.getExtent()) {
 				var layerExtent = layer.getExtent();
 
-				if (viewer.layerExtents[layer.get('id')] !== undefined)
-					layerExtent = viewer.layerExtents[layer.get('id')].getGeometry().getExtent();
+				if (this.layerExtents[layer.get('id')] !== undefined)
+					layerExtent = this.layerExtents[layer.get('id')].getGeometry().getExtent();
 
-				var visibleMapExtent = ol.extent.getIntersection(layerExtent, visibleExtent);
+				// Which part of the layer's extent is currently in the view? 
+				var layerVisibleExtent = ol.extent.getIntersection(layerExtent, visibleExtent);
 
 				// Only show layers that are inside the view
-				if (ol.extent.isEmpty(visibleMapExtent))
+				if (ol.extent.isEmpty(layerVisibleExtent))
 					return null;
 				
 				// Visibility: How much of the map would be visible in the current view
-				var visibility = getSurface(visibleMapExtent) / getSurface(layer.getExtent());
+				visibility = getSurface(layerVisibleExtent) / getSurface(layer.getExtent());
 
 				// Coverage: How much of the current view would be filled in by the map
-				var coverage = getSurface(visibleMapExtent) / getSurface(visibleExtent);
+				coverage = getSurface(layerVisibleExtent) / getSurface(visibleExtent);
 				
-				score = 2 * visibility + coverage;
+				score = visibility * coverage;
 			}
 			
 			return {
@@ -524,9 +524,11 @@
 				'name': layer.get('name'),
 				'thumbnail': layer.get('thumbnail'),
 				'type': type,
+				'visibility': visibility,
+				'coverage': coverage,
 				'score': score
 			};
-		});
+		}.bind(this));
 
 		// sort layers in size (smaller on top)
 		rasterLayers = rasterLayers.sort(function(a, b) {
@@ -829,6 +831,21 @@
 		}.bind(this));
 	};
 
+	Viewer.prototype.extentAsFeature = function(extent) {
+		var polygon = new ol.geom.Polygon([[
+			[extent[0], extent[1]],
+			[extent[2], extent[1]],
+			[extent[2], extent[3]],
+			[extent[0], extent[3]]
+			]], 'XY');
+		return new ol.Feature({geometry: polygon});
+	};
+
+	Viewer.prototype.currentViewAsFeature = function() {
+		var extent = this.map.getView().calculateExtent(this.map.getSize());
+		return this.extentAsFeature(extent);
+	};
+
 		
 
 		// map.getView().on('change:resolution', function() {
@@ -878,7 +895,10 @@
 					'data-layer-id': this.props.id,
 					'data-tooltip': 'Voeg \'' + this.props.name + '\' toe aan de zichtbare lagen',
 					'data-toggle': 'tooltip',
-					'data-placement': 'right'
+					'data-placement': 'right',
+					'data-score-visibility': this.props.visibility,
+					'data-score-coverage': this.props.coverage,
+					'data-score': this.props.score
 				},
 				this.props.thumbnail ? React.createElement('div', {'className': 'thumbnail-container'},
 					React.createElement('img', {
