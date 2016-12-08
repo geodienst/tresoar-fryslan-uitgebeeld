@@ -337,6 +337,7 @@
 									.prop('target', '_blank')
 									.prop('href', 'http://www.frieskaartenkabinet.nl/nl/fries-kaartenkabinet/' + kaart.slug)
 									.text('Bekijk in het Fries Kaartenkabinet')
+									.append('<span class="glyphicon glyphicon-new-window">')
 									.appendTo($div);
 
 								if (kaart.image)
@@ -381,6 +382,27 @@
 									$dl.append(
 										$('<dt>').text('Jaartal'),
 										$('<dd>').text(kaart.jaar1));
+
+								if (kaart.toeg_nr)
+									$dl.append(
+										$('<dt>').text('Toegangsnummer'),
+										$('<dd>').text(kaart.toeg_nr));
+
+								if (kaart.invnr)
+									$dl.append(
+										$('<dt>').text('Inventarisnummer'),
+										$('<dd>').text(kaart.invnr));
+
+								if (kaart.archief)
+									$dl.append(
+										$('<dt>').text('Archief'),
+										$('<dd>').text(kaart.archief));
+
+								if (kaart.kaartnr)
+									$dl.append(
+										$('<dt>').text('Kaartnummer'),
+										$('<dd>').text(kaart.kaartnr));
+
 
 								return $div;
 							});

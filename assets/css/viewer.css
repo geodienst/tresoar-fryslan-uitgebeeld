@@ -358,6 +358,18 @@ body.dragging, body.dragging * {
 	clear: right;
 }
 
+#feature-popup .frieskaartenkabinet-detail-link .glyphicon {
+	margin-left: 1ch;
+}
+
+#feature-popup .popover-content dt:after {
+	content: ':';
+}
+
+#feature-popup .popover-content dd {
+	margin-bottom: 0.5em;
+}
+
 #feature-selection-menu {
 	position: static;
 	max-width: 250px;
