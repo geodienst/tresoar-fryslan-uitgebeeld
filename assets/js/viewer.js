@@ -1,4 +1,65 @@
 (function() {
+	var ContextMenu = function(opt_options) {
+		var options = opt_options || {};
+
+		var element = document.createElement('ul');
+		element.className = 'context-menu dropdown-menu';
+
+		$(document.body).on('mousedown', function(e) {
+			if (!$.contains(element, e.target)) {
+				$(element).hide();
+			}
+		});
+		
+		ol.control.Control.call(this, {
+		  element: element,
+		  target: options.target
+		});
+	};
+
+	ol.inherits(ContextMenu, ol.control.Control);
+
+	ContextMenu.prototype.clear = function() {
+		$(this.element).empty();
+	}
+
+	ContextMenu.prototype.addItem = function(label, href) {
+		return $('<a>')
+			.text(label)
+			.attr('href', href || '#')
+			.appendTo($('<li>').appendTo(this.element));
+	}
+
+	ContextMenu.prototype.show = function(position) {
+		var viewport = {
+			width: $(this.getMap().getViewport()).width(),
+			height: $(this.getMap().getViewport()).height()
+		};
+
+		var size = {
+			width: $(this.element).width(),
+			height: $(this.element).height()
+		};
+
+		// If it doesnt fit on the right, move it to the left
+		if (position[0] + size.width > viewport.width)
+			position[0] -= size.width;
+
+		// If it would be larger than the viewport bottom, move it up a bit
+		if (position[1] + size.height > viewport.height)
+			position[1] = viewport.height - (size.height + 20);
+
+		$(this.element).css({
+			left: position[0] + 'px',
+			top: position[1] + 'px',
+			display: 'block'
+		});
+	}
+
+	ContextMenu.prototype.hide = function() {
+		$(this.element).hide();
+	}
+
 	var Viewer = function(config) {
 		this.config = config;
 		this.initialize();
@@ -65,6 +126,8 @@
 
 		this.layerExtents = {};
 
+		this.contextMenu = new ContextMenu();
+
 		this.map = new ol.Map({
 			layers: [
 				new ol.layer.Vector({
@@ -117,7 +180,8 @@
 					}
 				}
 			}).extend([
-				new ol.control.ScaleLine()
+				new ol.control.ScaleLine(),
+				this.contextMenu
 			])
 		});
 
@@ -310,22 +374,6 @@
 			viewer.hideFeaturePopup();
 		});
 
-		// Feature selection menu, used when clicking on multiple overlapping features
-		this.featureSelectionMenu = new ol.Overlay({
-			element: $('#feature-selection-menu').detach().get(0),
-			positioning: 'top-left',
-			stopEvent: true
-		});
-
-		this.map.addOverlay(this.featureSelectionMenu);
-
-		// Hide the featureSelectionMenu when we click outside it
-		$(document.body).on('mousedown', function(e) {
-			if (!$.contains(viewer.featureSelectionMenu.getElement(), e.target)) {
-				viewer.hideFeatureSelector();
-			}
-		});
-
 		this.hoverStyle = new ol.style.Style({
 			stroke: new ol.style.Stroke({
 				color: 'red',
@@ -337,7 +385,7 @@
 		});
 
 		// When we hover over a menu item in the feature selector, highlight that feature!
-		$(viewer.featureSelectionMenu.getElement())
+		$(viewer.contextMenu.element)
 			.on('mouseover', 'a', function(e) {
 				var feature = $(this).data('feature');
 				feature.feature.setStyle(viewer.hoverStyle);
@@ -350,7 +398,7 @@
 				e.preventDefault();
 				var feature = $(this).data('feature');
 				viewer.hideFeatureSelector();
-				viewer.showFeaturePopup(feature, {coordinate: viewer.featureSelectionMenu.getPosition()});
+				viewer.showFeaturePopup(feature);
 			});
 
 
@@ -389,7 +437,7 @@
 				viewer.showFeaturePopup(features[0], evt);
 			} else if (features.length > 1) {
 				viewer.hideFeaturePopup();
-				viewer.showFeatureSelector(features, evt);
+				viewer.showFeatureSelector(features, evt.pixel);
 			}
 		});
 
@@ -835,59 +883,45 @@
 		}
 	};
 
-	Viewer.prototype.showFeatureSelector = function(features, evt) {
+	Viewer.prototype.showFeatureSelector = function(features, position) {
 		var viewport = {
 			width: $(this.map.getViewport()).width(),
 			height: $(this.map.getViewport()).height()
 		};
 
-		var $popup = $(this.featureSelectionMenu.getElement())
-			.empty()
-			.append(
-				$.map(features, (function(feature) {
-					var $a = $('<a>')
-						.attr('href', '#')
-						.data('feature', feature)
-						.text('Loading…');
-					
-					this.getFeatureHeader(feature.feature, feature.layer).done(function(header) {
-						$a.text(header || '[Geen label]');
-						$a.prop('title', header);
-					});
+		this.contextMenu.clear();
 
-					return $('<li>').append($a);
-				}).bind(this)))
-			.css({
-				'max-height': (viewport.height - 20) + 'px',
-				'visibility': 'hidden'
-			})
-			.show();
+		features.forEach(function(feature) {
+			var $item = this.contextMenu.addItem('Loading…').data('feature', feature);
+			this.getFeatureHeader(feature.feature, feature.layer).done(function(header) {
+				$item.text(header || '[Geen label]');
+				$item.prop('title', header);
+			});
+		}.bind(this));
 
-		this.featureSelectionMenu.setPositioning('top-left');
-		this.featureSelectionMenu.setPosition(evt.coordinate);
+		this.contextMenu.show(position);
 
-		var offset = $popup.offset();
+		// var offset = $popup.offset();
 
-		var size = {
-			width: $popup.width(),
-			height: $popup.height()
-		};
+		// var size = {
+		// 	width: $popup.width(),
+		// 	height: $popup.height()
+		// };
 
-		var xPositioning = offset.left + size.width > viewport.width ? 'right' : 'left';
+		// var xPositioning = offset.left + size.width > viewport.width ? 'right' : 'left';
 
-		if (offset.top + 0.5 * size.height > viewport.height)
-			var yPositioning = 'bottom';
-		else if (offset.top + size.height > viewport.height)
-			var yPositioning = 'center';
-		else
-			var yPositioning = 'top';
+		// if (offset.top + 0.5 * size.height > viewport.height)
+		// 	var yPositioning = 'bottom';
+		// else if (offset.top + size.height > viewport.height)
+		// 	var yPositioning = 'center';
+		// else
+		// 	var yPositioning = 'top';
 		
-		this.featureSelectionMenu.setPositioning(yPositioning + '-' + xPositioning);
-		$popup.css({'visibility': 'visible'});
+		// this.featureSelectionMenu.setPositioning(yPositioning + '-' + xPositioning);
 	};
 
 	Viewer.prototype.hideFeatureSelector = function() {
-		$(this.featureSelectionMenu.getElement()).hide();
+		this.contextMenu.hide();
 	};
 
 	Viewer.prototype.addLayerExtents = function(features) {

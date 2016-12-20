@@ -370,14 +370,14 @@ body.dragging, body.dragging * {
 	margin-bottom: 0.5em;
 }
 
-#feature-selection-menu {
-	position: static;
+.context-menu {
+	position: absolute;
 	overflow: auto;
 	max-width: 250px;
-	max-height: calc(100vh - 20px);
+	max-height: 80vh;
 }
 
-#feature-selection-menu li > a {
+.context-menu li > a {
 	text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;
