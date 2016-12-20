@@ -218,8 +218,7 @@
 			var layer = viewer.layers[layerId];
 
 			// Remove the bounding box overlay if that is still shown
-			if (viewer.layerExtents[layerId] !== undefined)
-				viewer.featureOverlay.getSource().removeFeature(viewer.layerExtents[layerId]);
+			viewer.removeLayerOutline(layerId);
 
 			// Move the layer to the top
 			layer.setZIndex(viewer.map.getLayers().getArray().length);
@@ -232,8 +231,7 @@
 		$('#layers').on('click', '.remove-layer-button', function(e) {
 			var layerId = $(this).closest('.layer').attr('data-layer-id');
 			var layer = viewer.layers[layerId];
-			if (viewer.layerExtents[layerId] !== undefined)
-				viewer.featureOverlay.getSource().removeFeature(viewer.layerExtents[layerId]);
+			viewer.removeLayerOutline(layerId);
 			viewer.map.removeLayer(layer);
 		});
 
@@ -273,16 +271,12 @@
 		// Outline of map when hovering over a layer in the sidebar
 		$('#layers').on('mouseover', '.layer', function(e) {
 			var layerId = $(this).attr('data-layer-id');
-			var layer = viewer.layers[layerId];
-			if (viewer.layerExtents[layerId] !== undefined)
-				viewer.featureOverlay.getSource().addFeature(viewer.layerExtents[layerId]);
+			viewer.addLayerOutline(layerId);
 		});
 
 		$('#layers').on('mouseout', '.layer', function(e) {
 			var layerId = $(this).attr('data-layer-id');
-			var layer = viewer.layers[layerId];
-			if (viewer.layerExtents[layerId] !== undefined)
-				viewer.featureOverlay.getSource().removeFeature(viewer.layerExtents[layerId]);
+			viewer.removeLayerOutline(layerId);
 		});
 
 		var groupCollapsed = {};
@@ -410,6 +404,20 @@
 		this._isRestoringState = false;
 	};
 
+	Viewer.prototype.addLayerOutline = function(layerId) {
+		if (this.layerExtents[layerId] !== undefined)
+			this.featureOverlay.getSource().addFeature(this.layerExtents[layerId]);
+	};
+
+	Viewer.prototype.removeLayerOutline = function(layerId) {
+		try {
+			if (this.layerExtents[layerId] !== undefined)
+				this.featureOverlay.getSource().removeFeature(this.layerExtents[layerId]);
+		} catch (e) {
+			// Apparently it was already removed
+		}
+	}
+
 	Viewer.prototype.addLayer = function(layer) {
 		layer.on(['change:zIndex', 'change:opacity'], this._updatePermalink);
 		this.layers[layer.get('id')] = layer;
@@ -418,7 +426,7 @@
 			this.layerExtents[layer.get('id')] = layer.get('bbox');
 
 		this.scheduleUpdateLayerList();
-	}
+	};
 
 	Viewer.prototype.updateLayerZOrder = function() {
 		var viewer = this;
