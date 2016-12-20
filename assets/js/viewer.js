@@ -836,7 +836,12 @@
 	};
 
 	Viewer.prototype.showFeatureSelector = function(features, evt) {
-		$(this.featureSelectionMenu.getElement())
+		var viewport = {
+			width: $(this.map.getViewport()).width(),
+			height: $(this.map.getViewport()).height()
+		};
+
+		var $popup = $(this.featureSelectionMenu.getElement())
 			.empty()
 			.append(
 				$.map(features, (function(feature) {
@@ -852,8 +857,33 @@
 
 					return $('<li>').append($a);
 				}).bind(this)))
+			.css({
+				'max-height': (viewport.height - 20) + 'px',
+				'visibility': 'hidden'
+			})
 			.show();
+
+		this.featureSelectionMenu.setPositioning('top-left');
 		this.featureSelectionMenu.setPosition(evt.coordinate);
+
+		var offset = $popup.offset();
+
+		var size = {
+			width: $popup.width(),
+			height: $popup.height()
+		};
+
+		var xPositioning = offset.left + size.width > viewport.width ? 'right' : 'left';
+
+		if (offset.top + 0.5 * size.height > viewport.height)
+			var yPositioning = 'bottom';
+		else if (offset.top + size.height > viewport.height)
+			var yPositioning = 'center';
+		else
+			var yPositioning = 'top';
+		
+		this.featureSelectionMenu.setPositioning(yPositioning + '-' + xPositioning);
+		$popup.css({'visibility': 'visible'});
 	};
 
 	Viewer.prototype.hideFeatureSelector = function() {
