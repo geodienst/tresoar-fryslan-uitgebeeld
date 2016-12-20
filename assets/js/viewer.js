@@ -237,6 +237,33 @@
 			viewer.map.removeLayer(layer);
 		});
 
+		// Focus layer on double click
+		$('#layers').on('dblclick', '#active-layers .layer', function(e) {
+			e.preventDefault();
+
+			var layerId = $(this).closest('.layer').attr('data-layer-id');
+			var feature = viewer.layerExtents[layerId];
+
+			if (feature === undefined)
+				return;
+
+			viewer.map.beforeRender(ol.animation.pan({
+				duration: viewer.animationDuration,
+				source: viewer.map.getView().getCenter()
+			}));
+
+			viewer.map.beforeRender(ol.animation.zoom({
+				duration: viewer.animationDuration,
+				resolution: viewer.map.getView().getResolution()
+			}));
+			
+			// Zoom & pan to the feature
+			viewer.map.getView().fit(feature.getGeometry(), viewer.map.getSize(), {
+				maxZoom: 16,
+				padding: [10, 10, 10, 10]
+			});
+		});
+
 		// Change layer opacity slider
 		$('#layers').on('change', '.layer input[name=opacity]', function(e) {
 			var layerId = $(this).closest('.layer').attr('data-layer-id');
