@@ -176,7 +176,7 @@
 					render: function(mapEvent) {
 						// Add the Geodienst attribution, which is not connected to a specific source
 						mapEvent.frameState.attributions.geodienst = geodienstAttribution;
-						this.updateElement_(mapEvent.frameState);
+						ol.control.Attribution.render.call(this, mapEvent);
 					}
 				}
 			}).extend([
