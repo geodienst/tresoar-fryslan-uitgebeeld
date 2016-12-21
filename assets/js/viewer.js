@@ -309,20 +309,11 @@
 			if (feature === undefined)
 				return;
 
-			viewer.map.beforeRender(ol.animation.pan({
-				duration: viewer.animationDuration,
-				source: viewer.map.getView().getCenter()
-			}));
-
-			viewer.map.beforeRender(ol.animation.zoom({
-				duration: viewer.animationDuration,
-				resolution: viewer.map.getView().getResolution()
-			}));
-			
 			// Zoom & pan to the feature
 			viewer.map.getView().fit(feature.getGeometry(), viewer.map.getSize(), {
 				maxZoom: 16,
-				padding: [10, 10, 10, 10]
+				padding: [10, 10, 10, 10],
+				duration: viewer.animationDuration
 			});
 		});
 
@@ -411,7 +402,7 @@
 			clearTimeout(updatePointerTimeout);
 			updatePointerTimeout = setTimeout(function() {
 				var pixel = viewer.map.getEventPixel(e.originalEvent);
-				var hit = viewer.map.hasFeatureAtPixel(pixel, viewer.layerFilter, viewer);
+				var hit = viewer.map.hasFeatureAtPixel(pixel, {layerFilter: viewer.layerFilter.bind(viewer)});
 				viewer.map.getTarget().style.cursor = hit ? 'pointer' : '';
 			}, 250);
 		});
@@ -431,7 +422,9 @@
 					});
 				else
 					features.push({feature: feature, layer: layer});
-			}, null, viewer.layerFilter, viewer);
+			}, {
+				layerFilter: viewer.layerFilter.bind(viewer)
+			});
 
 			if (features.length === 1) {
 				viewer.showFeaturePopup(features[0], evt);
@@ -823,16 +816,6 @@
 			resolution: this.prePopupState ? this.prePopupState.resolution : this.map.getView().getResolution()
 		};
 
-		this.map.beforeRender(ol.animation.pan({
-			duration: this.animationDuration,
-			source: this.map.getView().getCenter()
-		}));
-
-		this.map.beforeRender(ol.animation.zoom({
-			duration: this.animationDuration,
-			resolution: this.map.getView().getResolution()
-		}));
-		
 		// After the animation, start listening for mapping and panning
 		setTimeout(function(map) {
 			this.map.getView().once(['change:center', 'change:resolution'], function() {
@@ -850,7 +833,8 @@
 		// Zoom & pan to the feature
 		this.map.getView().fit(feature.feature.getGeometry(), this.map.getSize(), {
 			maxZoom: 16,
-			padding: [50, this.popup.width(), 10, 10]
+			padding: [50, this.popup.width(), 10, 10],
+			duration: this.animationDuration
 		});
 	};
 
@@ -868,18 +852,11 @@
 			var prePopupState = this.prePopupState;
 			this.prePopupState = null;
 
-			this.map.beforeRender(ol.animation.pan({
-				duration: this.animationDuration,
-				source: this.map.getView().getCenter()
-			}));
-
-			this.map.beforeRender(ol.animation.zoom({
-				duration: this.animationDuration,
-				resolution: this.map.getView().getResolution()
-			}));
-
-			this.map.getView().setCenter(prePopupState.center);
-			this.map.getView().setResolution(prePopupState.resolution);
+			this.map.getView().animate({
+				center: prePopupState.center,
+				resolution: prePopupState.resolution,
+				duration: this.animationDuration
+			});
 		}
 	};
 
