@@ -434,8 +434,9 @@
 			}
 		});
 
-		// Update the layer list when panning
-		this.map.getView().on('change:center', this.scheduleUpdateLayerList.bind(this));
+		// Update the layer list when zooming or panning
+		this.map.getView().on(['change:center', 'change:resolution'],
+			this.scheduleUpdateLayerList.bind(this));
 
 		this.sidebar = new Sidebar(this, $('#layers'), $('#map'));
 
