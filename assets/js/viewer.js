@@ -286,6 +286,9 @@
 
 			// Move the layer to the top
 			layer.setZIndex(viewer.map.getLayers().getArray().length);
+
+			// Make layer fully visible
+			layer.setOpacity(1.0);
 			
 			// Add the layer to the map
 			viewer.map.addLayer(layer);
@@ -440,6 +443,14 @@
 
 		this.sidebar = new Sidebar(this, $('#layers'), $('#map'));
 
+		this.layerList = new LayerList({
+			rootNode: $('#available-layers'),
+			listItemClass: LayerGroup,
+			key: function(group) {
+				return group.name;
+			}
+		});
+
 		// Update the layer list now
 		this.triggerUpdateLayerList();
 
@@ -527,7 +538,7 @@
 				},
 				'remove-layer-button': {
 					'data-tooltip': function() {
-						return 'Verplaats ' + this.layer.id + ' terug naar \'Beschikbare kaarten\'';
+						return 'Verplaats ' + this.layer['layer-name'] + ' terug naar \'Beschikbare lagen\'';
 					}
 				}
 			}
@@ -657,9 +668,7 @@
 			return ai - bi;
 		}).bind(this));
 
-		ReactDOM.render(
-			React.createElement(Viewer.LayerList, {groups: rasterLayers}),
-			document.getElementById('available-layers'));
+		this.layerList.render(rasterLayers);
 	}
 
 		
@@ -962,61 +971,104 @@
 		});
 		*/
 
-	Viewer.AvailableLayer = React.createClass({
-		displayName: 'AvailableLayer',
-		render: function() {
-			return React.createElement('button', {
-					'key': this.props.id,
-					'type': 'button',
-					'className': 'layer add-layer-button list-group-item',
-					'data-layer-id': this.props.id,
-					'data-tooltip': 'Voeg \'' + this.props.name + '\' toe aan de zichtbare lagen',
-					'data-toggle': 'tooltip',
-					'data-placement': 'right',
-					'data-score-visibility': this.props.visibility,
-					'data-score-coverage': this.props.coverage,
-					'data-score': this.props.score
-				},
-				this.props.thumbnail ? React.createElement('div', {'className': 'thumbnail-container'},
-					React.createElement('img', {
-						'className': 'thumbnail',
-						'src': this.props.thumbnail,
-						'width': 256,
-						'height': 256
-					})
-				) : null,
-				React.createElement('span', {'className': 'name'}, this.props.name)
-			);
-		}
-	});
+	function AvailableLayer() {
+		this.$button = $('<button type="button">');
+		this.$button.addClass('layer add-layer-button list-group-item');
+		this.$button.attr({
+			'data-toggle': 'tooltip',
+			'data-placement': 'right'
+		});
 
-	Viewer.LayerList = React.createClass({
-		displayName: 'LayerList',
-		render: function() {
-			return React.createElement('div', {'class': 'layers available-layers'},
-				this.props.groups.map(function(group) {
-					return React.createElement('div', {
-							'key': group.name,
-							'data-group-id': group.name,
-							'className': 'layer-group'
-						},
-						React.createElement('h4', {'className': 'layer-group-header'},
-							group.name,
-							React.createElement('span', {'className': 'layer-group-count badge'}, group.layers.length),
-							React.createElement('button', {'className': 'group-toggle'},
-								React.createElement('span', {'className': 'glyphicon glyphicon-minus'})
-							)
-						),
-						React.createElement('div', {'className': 'layers list-group'},
-							group.layers.map(function(layer) {
-								return 	React.createElement(Viewer.AvailableLayer, layer);
-							})
-						)
-					);
-				})
-			);
+		this.$thumbnail = $('<img width="256" height="256">');
+		this.$thumbnail.addClass('thumbnail');
+
+		this.$thumbnailContainer = $('<div>').addClass('thumbnail-container');
+		this.$thumbnailContainer.append(this.$thumbnail);
+
+		this.$name = $('<span>').addClass('name');
+
+		this.$button.append(this.$thumbnailContainer, this.$name);
+	}
+
+	AvailableLayer.prototype.render = function(layer) {
+		this.$button.attr({
+			'data-layer-id': layer.id,
+			'data-tooltip': 'Voeg \'' + layer.name + '\' toe aan de zichtbare lagen',
+			'data-score-visibility': layer.visibility,
+			'data-score-coverage': layer.coverage,
+			'data-score': layer.score
+		});
+
+		if (layer.thumbnail) {
+			this.$thumbnail.attr('src', layer.thumbnail);
+			this.$thumbnailContainer.show();
 		}
-	});
+		else
+			this.$thumbnailContainer.hide();
+
+		this.$name.text(layer.name);
+
+		return this.$button;
+	}
+
+	function LayerList(options) {
+		this.$rootNode = $(options.rootNode);
+		this.listItemClass = options.listItemClass;
+		this.key = options.key;
+		this.listItems = {};
+	}
+
+	LayerList.prototype.render = function(listItems) {
+		this.$rootNode.children().detach();
+
+		this.$rootNode.append(
+			listItems.map(function(listItem) {
+				var key = this.key(listItem);
+				if (!(key in this.listItems))
+					this.listItems[key] = new this.listItemClass();
+
+				return this.listItems[key].render(listItem);
+			}.bind(this))
+		);
+
+		return this.$rootNode;
+	}
+
+	function LayerGroup() {
+		this.$div = $('<div>').addClass('layer-group');
+		
+		this.$groupName = document.createTextNode('{Group name}');
+		this.$layerCount = document.createTextNode('0');
+
+		var $header = $('<h4>').addClass('layer-group-header');
+
+		var $layerCountBadge = $('<span>').addClass('layer-group-count badge').append(this.$layerCount);
+
+		var $toggle = $('<button>').addClass('group-toggle').append(
+			$('<span>').addClass('glyphicon glyphicon-minus'));
+
+		$header.append(this.$groupName, $layerCountBadge, $toggle);
+
+		var $layerList = $('<div>').addClass('layers list-group');
+
+		this.layerList = new LayerList({
+			rootNode: $layerList,
+			listItemClass: AvailableLayer,
+			key: function(layer) {
+				return layer.id;
+			}
+		});
+
+		this.$div.append($header, $layerList);
+	}
+
+	LayerGroup.prototype.render = function(group) {
+		this.$div.attr({'data-group-id': group.name});
+		this.$groupName.textContent = group.name;
+		this.$layerCount.textContent = group.layers.length;
+		this.layerList.render(group.layers);
+		return this.$div;
+	}
 
 	function Sidebar(viewer, $layers, $map)
 	{
