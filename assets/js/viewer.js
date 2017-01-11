@@ -820,32 +820,52 @@
 
 		this.popup.show();
 
+		// if we still have a reset listener listening, cancel it now
+		if (this.prePopupState && this.prePopupState.resetListenerKey !== null)
+			this.map.getView().unByKey(this.prePopupState.resetListenerKey);
+
+		// Prepare the new popup-state (where we switch to when we close the popup)
 		this.prePopupState = {
 			feature: feature,
 			center: this.prePopupState ? this.prePopupState.center : this.map.getView().getCenter(),
-			resolution: this.prePopupState ? this.prePopupState.resolution : this.map.getView().getResolution()
+			resolution: this.prePopupState ? this.prePopupState.resolution : this.map.getView().getResolution(),
+			resetListenerKey: null
 		};
 
-		// After the animation, start listening for mapping and panning
-		setTimeout(function(map) {
-			this.map.getView().once(['change:center', 'change:resolution'], function() {
+		// Prepare a new reset listener: this clears the prePopupState when you start zooming or
+		// panning manually. In this case we do want to close the popup, but we don't want the
+		// map to zoom back to its original state (as that would mess with the current interaction
+		// of the user!)
+		var registerResetPopupState = (function() {
+			this.prePopupState.resetListenerKey = this.map.getView().on(['change:center', 'change:resolution'], function(e) {
+				// For some reason change:center is also called when you click another feature instead of
+				// actually panning. But then the center isn't changed, and we can test for that.
+				if (e.key == 'center' && e.oldValue.toString() == this.map.getView().getCenter().toString())
+					return;
+				
 				// When they do, hide the feature popup, but make sure
-				// that we don't take over control of the panning and zooming.
-				// And to prevent it being called multiple times, only reset if we're
-				// resetting from our own feature.
-				if (this.prePopupState && this.prePopupState.feature === feature) {
-					this.prePopupState = null;
-					this.hideFeaturePopup();
-				}
+				// that we don't take over control of the panning and zooming.				
+				this.map.getView().unByKey(this.prePopupState.resetListenerKey);
+				this.prePopupState = null;
+				this.hideFeaturePopup();
 			}.bind(this));
-		}.bind(this), this.animationDuration + 50);
-		
+		}).bind(this);
+
+		// Monkey-patch ol.View.animate (which will be called by ol.View.fit) to call
+		// a the registerResetPopupState callback (because I can't pass that to ol.View.fit)
+		this.map.getView().animate = function(options) {
+			return ol.View.prototype.animate.call(this, options, registerResetPopupState);
+		};
+
 		// Zoom & pan to the feature
 		this.map.getView().fit(feature.feature.getGeometry(), this.map.getSize(), {
 			maxZoom: 16,
 			padding: [50, this.popup.width(), 10, 10],
 			duration: this.animationDuration
 		});
+
+		// Undo our monkey patch
+		delete this.map.getView().animate;
 	};
 
 	Viewer.prototype.hideFeaturePopup = function() {
@@ -861,6 +881,10 @@
 			// the reset listener is called and prePopupState is gone!
 			var prePopupState = this.prePopupState;
 			this.prePopupState = null;
+
+			// If we still have a reset listener listening in, cancel that.
+			if (prePopupState.resetListenerKey)
+				this.map.getView().unByKey(prePopupState.resetListenerKey);
 
 			this.map.getView().animate({
 				center: prePopupState.center,
