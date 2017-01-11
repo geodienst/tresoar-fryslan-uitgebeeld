@@ -407,7 +407,7 @@
 				var pixel = viewer.map.getEventPixel(e.originalEvent);
 				var hit = viewer.map.hasFeatureAtPixel(pixel, {layerFilter: viewer.layerFilter.bind(viewer)});
 				viewer.map.getTarget().style.cursor = hit ? 'pointer' : '';
-			}, 250);
+			}, 50);
 		});
 
 		// When clicking on the map, we might click a feature!
