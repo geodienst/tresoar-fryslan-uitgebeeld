@@ -315,8 +315,9 @@ body.dragging, body.dragging * {
 
 #feature-popup button.close {
 	position: absolute;
-	top: 5px;
-	right: 20px;
+	top: 0;
+	right: 0;
+	padding: 5px 10px;
 }
 
 #feature-popup .popover-title {
