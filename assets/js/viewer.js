@@ -1024,8 +1024,10 @@
 		});
 
 		if (layer.thumbnail) {
-			this.$thumbnail.attr('src', layer.thumbnail);
-			this.$thumbnailContainer.show();
+			if (this.$thumbnail.attr('src') != layer.thumbnail) {
+				this.$thumbnail.attr('src', layer.thumbnail);
+				this.$thumbnailContainer.show();
+			}
 		}
 		else
 			this.$thumbnailContainer.hide();
