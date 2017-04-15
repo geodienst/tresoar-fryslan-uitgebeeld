@@ -34,4 +34,4 @@ ForEach ($file in $files) {
 }
 ```
 
-In Geoserver zijn de tiles allemaal van tevoren gecached. Dit wordt aangestuurd door seed-cache.html. De viewer vraagt alleen maar tiles op op zo'n manier dat dit voor cache hits zorgt in deze cache.
+In Geoserver zijn de tiles allemaal van tevoren gecached. Dit wordt aangestuurd door [seed-cache.html](https://gist.github.com/jelmervdl/eb7cbed5d6042d2a9789fc20254aef42). De viewer vraagt alleen maar tiles op op zo'n manier dat dit voor cache hits zorgt in deze cache.
