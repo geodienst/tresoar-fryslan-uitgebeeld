@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Seed tool</title>
+		<style>
+			.seed-status {
+				display: inline-block;
+				padding; 2px;
+				background: #ccc;
+			}
+		</style>
+	</head>
+	<body>
+		<button onclick="ui_load_layers()">Load layers</button>
+		<button onclick="ui_seed_selected_layers()">Seed selected layers</button>
+		<ol id="layer_list"></ol>
+		<script>
+			var user = prompt('user');
+			var password = prompt('password');
+
+			function list_layers(callback) {
+				var request = new XMLHttpRequest();
+				request.open('GET', 'https://localhost/gwc/rest/layers', true, user, password);
+				request.onreadystatechange = function() {
+					if (request.readyState == 4) {
+						var domLayers = request.responseXML.getElementsByTagName('layer');
+						var layers = Array.prototype.map.call(domLayers, function(domLayer) {
+							return domLayer.getElementsByTagName('name').item(0).firstChild.nodeValue;
+						});
+						callback(layers);
+					}
+				}
+				request.send();
+			}
+
+			function get_seed_status(layer_name, callback) {
+				var request = new XMLHttpRequest();
+				request.open('GET', 'https://localhost/gwc/rest/seed/' + encodeURIComponent(layer_name) + '.json', true, user, password);
+				request.setRequestHeader("cache-control", "private");
+				request.onreadystatechange = function() {
+					if (request.readyState == 4) {
+						var data = new Function('return (' + request.responseText + ')')();
+						if (data['long-array-array'].length == 0)
+							return callback(null);
+
+						var processed = 0;
+						var total = 0;
+
+						for (var i = 0; i < data['long-array-array'].length; ++i) {
+							processed += data['long-array-array'][i][0];
+							total      = data['long-array-array'][i][1];
+						}
+
+						callback(processed / total);
+					}
+				}
+				request.send();
+			}
+
+			function start_seeding(layer_name, callback) {
+				var request = new XMLHttpRequest();
+				request.open('POST', 'https://localhost/gwc/rest/seed/' + encodeURIComponent(layer_name) + '.xml', true, user, password);
+				request.onreadystatechange = function() {
+					if (request.readyState == 4)
+						callback(layer_name);
+				};
+				request.setRequestHeader('Content-Type', 'text/xml');
+				var body = '<seedRequest>'
+					+ '<name>' + layer_name + '</name>'
+					+ '<gridSetId>EPSG:28992</gridSetId>'
+					+ '<zoomStart>0</zoomStart>'
+					+ '<zoomStop>13</zoomStop>'
+					+ '<format>image/jpeg</format>'
+					+'<type>reseed</type>'
+					+ '<threadCount>1</threadCount>'
+					+ '</seedRequest>';  
+				request.send(body);
+			}
+
+			var ui_layers = {};
+			var ui_layer_seed_status = {};
+
+			function ui_update_layer_seed_status(layer_name) {
+				var status = ui_layer_seed_status[layer_name];
+				status.innerHTML = 'querying...';
+
+				get_seed_status(layer_name, function(seeding) {
+					status.innerHTML = seeding === null ? 'Idle' : (Math.floor(seeding * 1000) / 10).toString() + '%';
+				});
+			}
+
+			function ui_load_layers() {
+				var layerList = document.getElementById('layer_list');
+
+				// Remove the old
+				for (var layer_name in ui_layers) {
+					layerList.removeChild(ui_layers[layer_name]);
+				}
+
+				// Reset the UI
+				ui_layers = {};
+				ui_layer_seed_status = {};
+
+				// Load the new
+				list_layers(function(layers) {
+					layers.forEach(function(layer) {
+						var li = document.createElement('li');
+
+						var name = document.createTextNode(layer)
+						li.appendChild(name);
+
+						var seed_button = document.createElement('button');
+						seed_button.innerHTML = 'Seed!';
+						seed_button.onclick = function() {
+							start_seeding(layer, function() {
+								ui_update_layer_seed_status(layer);
+							});
+						};
+						li.appendChild(seed_button);
+
+						var status = document.createElement('span');
+						status.className = 'seed-status';
+						status.innerHTML = 'unknown';
+						status.onclick = function() {
+							ui_update_layer_seed_status(layer);
+						};
+						li.appendChild(status);
+
+						ui_layers[layer] = li;
+						ui_layer_seed_status[layer] = status;
+
+						ui_update_layer_seed_status(layer);
+
+						layerList.appendChild(li);
+					});
+				});
+			}
+		</script>
+	</body>
+</html>
