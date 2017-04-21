@@ -865,7 +865,7 @@
 
 		// Zoom & pan to the feature
 		this.map.getView().fit(feature.feature.getGeometry(), this.map.getSize(), {
-			maxZoom: 16,
+			maxZoom: Math.max(16, this.map.getView().getZoom()),
 			padding: [50, this.popup.width(), 10, 10],
 			duration: this.animationDuration
 		});
