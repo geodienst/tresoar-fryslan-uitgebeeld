@@ -671,7 +671,13 @@
 		this.layerList.render(rasterLayers);
 	}
 
-		
+	Viewer.prototype.debugExtentCoverage = function() {
+		/* Returns all layers that have a default extent instead of a pretty one */
+		return Object.values(this.layers)
+			.reduce((function(acc, layer) {
+				return this.layerExtents[layer.get('id')] === layer.get('bbox') ? acc.concat([layer]) : acc;
+			}).bind(this), []);
+	}	
 
 	// Scheduling and triggering layer list updates. Please use schedule
 	// as much as possible for example while panning the map or typing in
