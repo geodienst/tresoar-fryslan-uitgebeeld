@@ -542,6 +542,7 @@
 			viewer.addLayer(new ol.layer.Vector({
 				id: 'tresoarfeatures:NAMEN_1622_1749',
 				name: 'Huisnamen 1622–1749',
+				updateWhileInteracting: true,
 				source: new ol.source.Cluster({
 					distance: 40,
 					source: new ol.source.Vector({
@@ -588,6 +589,7 @@
 			viewer.addLayer(new ol.layer.Vector({
 				id: 'tresoarfeatures:kaartnummers',
 				name: 'Fries Kaartenkabinet',
+				updateWhileInteracting: true,
 				source: new ol.source.Cluster({
 					distance: 40,
 					source: new ol.source.Vector({
@@ -633,6 +635,7 @@
 			viewer.addLayer(new ol.layer.Vector({
 				id: 'PGR:CHK2_StinzenStates',
 				name: 'States en Stinzen',
+				updateWhileInteracting: true,
 				source: new ol.source.Vector({
 					loader: function(extent, resolution, projection) {
 						$.ajax(GEOSERVER_TRESOAR, {
@@ -702,6 +705,7 @@
 			viewer.addLayer(new ol.layer.Vector({
 				id: 'RCE:Rijksmonumenten',
 				name: 'Rijksmonumenten',
+				updateWhileInteracting: true,
 				source: new ol.source.Cluster({
 					distance: 40,
 					source: new ol.source.Vector({
@@ -755,6 +759,7 @@
 			viewer.addLayer(new ol.layer.Vector({
 				id: 'RCE:Buitenplaatsen',
 				name: 'Buitenplaatsen',
+				updateWhileInteracting: true,
 				source: new ol.source.Vector({
 					loader: function(extent, resolution, projection) {
 						$.ajax(GEOSERVER_TRESOAR, {
