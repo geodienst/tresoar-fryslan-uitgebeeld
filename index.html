@@ -707,7 +707,7 @@
 			viewer.addLayer(new ol.layer.Vector({
 				id: 'RCE:Rijksmonumenten',
 				name: 'Rijksmonumenten',
-				updateWhileInteracting: true,
+				updateWhileInteracting: false, // Too inefficient
 				source: new ol.source.Cluster({
 					distance: 40,
 					source: new ol.source.Vector({
