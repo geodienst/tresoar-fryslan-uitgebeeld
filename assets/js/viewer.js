@@ -382,10 +382,17 @@
 		$(viewer.contextMenu.element)
 			.on('mouseover', 'a', function(e) {
 				var feature = $(this).data('feature');
+				// Points are clustered, and changing their style causes a change event which
+				// will trigger a complete reclustering...
+				if (feature.feature.getGeometry() instanceof ol.geom.Point)
+					return;
+				
 				feature.feature.setStyle(viewer.hoverStyle);
 			})
 			.on('mouseout', 'a', function(e) {
 				var feature = $(this).data('feature');
+				if (feature.feature.getGeometry() instanceof ol.geom.Point)
+					return;
 				feature.feature.setStyle(null);
 			})
 			.on('click', 'a', function(e) {
