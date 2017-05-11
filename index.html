@@ -479,38 +479,23 @@
 				id: 'ACHTERGROND:TMK',
 				name: 'Topografische en Militaire Kaart',
 				extent: Viewer.EPSG28992.extent,
-				source: new ol.source.XYZ({
-					projection: Viewer.EPSG28992,
-					tileGrid: new ol.tilegrid.WMTS({
-						origin: ol.extent.getTopLeft(Viewer.EPSG28992.extent),
-						tileSize: [256,256],
-						resolutions: [
-							3251.206502413005,
-							1625.6032512065026,
-							812.8016256032513,
-							406.40081280162565,
-							203.20040640081282,
-							101.60020320040641,
-							50.800101600203206,
-							25.400050800101603,
-							12.700025400050801,
-							6.350012700025401,
-							3.1750063500127004
-						],
-						matrixIds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-					}),
-					tileUrlFunction: function(tileCoord) {
-						return 'https://geo.rug.nl/arcgis/rest/services/HistorischeKaarten/TMK_ZwartWit_Cached/MapServer/tile/{z}/{y}/{x}'
-							.replace('{z}', (tileCoord[0]).toString())
-							.replace('{x}', (tileCoord[1]).toString())
-							.replace('{y}', (-tileCoord[2]-1).toString());
-					},
-					wrapX: true,
+				source: new ol.source.TileWMS({
+					url: 'https://geo.rug.nl/image/services/HistorischeKaarten/TMKZwartWit/ImageServer/WMSServer',
+					crossOrigin: 'anonymous',
 					attributions: [
 						new ol.Attribution({
 							html: '<a href="http://www.kadaster.nl" target="_blank">TMK © Kadaster</a>'
 						})
-					]
+					],
+					params: {
+						LAYERS: '0',
+						TILED: true,
+						TRANSPARENT: false,
+						FORMAT: 'image/jpeg'
+					},
+					matrixSet: 'EPSG:28992',
+					projection: Viewer.EPSG28992,
+					tileGrid: Viewer.EPSG28992.tileGrid
 				})
 			}));
 
