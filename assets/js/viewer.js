@@ -352,9 +352,12 @@
 		// Layer searching
 		$('#layer-filter-query').on('keyup', this.scheduleUpdateLayerList.bind(this));
 
-		$('#layers .layer-filter .search-button').on('click', this.triggerUpdateLayerList.bind(this));
+		$('#layers .layer-filter').on('submit', function(e) {
+			e.preventDefault();
+			viewer.triggerUpdateLayerList()
+		});
 
-		$('#layers .layer-filter .clear-button').on('click', function() {
+		$('#layers .layer-filter').on('reset', function(e) {
 			$('#layer-filter-query').val('');
 			viewer.triggerUpdateLayerList();
 		});
