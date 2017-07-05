@@ -30,6 +30,11 @@ html, body {
 	content: ', ';
 }
 
+#map .ol-attribution a {
+	color: inherit;
+	text-decoration: underline;
+}
+
 #map .ol-control button {
 	background: white;
 	color: #333;
