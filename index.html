@@ -848,34 +848,42 @@ https://geodata.nationaalgeoregister.nl/luchtfoto/rgb/wmts?request=GetCapabiliti
 			// Start with an Open Topo achtergrond kaart as layer
 			viewer.map.addLayer(viewer.layers['ACHTERGROND:OPENTOPO']);
 
-			$('#address-query').on('typeahead:select', function(e, address) {
-				switch (address.niveau) {
-					case 'huisnummer':
-						var maxZoom = 23;
-						break;
-					case 'straat':
-						var maxZoom = 18;
-						break;
-					case 'plaats':
-					default:
-						var maxZoom = 14;
-						break;
-				}
+			$('#address-query').on('typeahead:select', function(e, suggestion) {
+				suggestion.fetch(function(address) {
+					switch (address.type) {
+						case 'adres':
+							var maxZoom = 23;
+							break;
+						case 'weg':
+							var maxZoom = 18;
+							break;
+						case 'postcode':
+							var maxZoom = 16;
+							break;
+						case 'woonplaats':
+						case 'gemeente':
+						default:
+							var maxZoom = 14;
+							break;
+					}
 
-				viewer.map.beforeRender(ol.animation.pan({
-					duration: viewer.animationDuration,
-					source: viewer.map.getView().getCenter()
-				}));
+					viewer.map.beforeRender(ol.animation.pan({
+						duration: viewer.animationDuration,
+						source: viewer.map.getView().getCenter()
+					}));
 
-				viewer.map.beforeRender(ol.animation.zoom({
-					duration: viewer.animationDuration,
-					resolution: viewer.map.getView().getResolution()
-				}));
+					viewer.map.beforeRender(ol.animation.zoom({
+						duration: viewer.animationDuration,
+						resolution: viewer.map.getView().getResolution()
+					}));
 
-				viewer.map.getView().fit(
-					new ol.geom.Point(address.pos.split(/\s/).map(parseFloat)),
-					viewer.map.getSize(),
-					{maxZoom: maxZoom});
+					var xy = address.centroide_rd.match(/POINT\((.+) (.+)\)/).slice(1);
+
+					viewer.map.getView().fit(
+						new ol.geom.Point(xy.map(parseFloat)),
+						viewer.map.getSize(),
+						{maxZoom: maxZoom});
+				});
 			});
 		</script>
 		<script src="assets/js/pdok-geocoder.js"></script>
