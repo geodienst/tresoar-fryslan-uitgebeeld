@@ -320,7 +320,7 @@
 						pattern: /:kaartnummers$/,
 						header: function(feature) {
 							return fkk.get(feature.get('kaartnr')).then(function(kaart){
-								return kaart.titel;
+								return kaart.tresoar_titel;
 							});
 						},
 						content: function(feature) {
@@ -330,73 +330,73 @@
 								$('<a>')
 									.addClass('frieskaartenkabinet-detail-link btn btn-default')
 									.prop('target', '_blank')
-									.prop('href', 'http://www.frieskaartenkabinet.nl/nl/fries-kaartenkabinet/' + kaart.slug)
+									.prop('href', 'http://www.frieskaartenkabinet.nl/nl/fries-kaartenkabinet/' + kaart.tresoar_slug)
 									.text('Bekijk in het Fries Kaartenkabinet')
 									.append('<span class="glyphicon glyphicon-new-window">')
 									.appendTo($div);
 
-								if (kaart.image)
+								if (kaart.tresoar_image)
 									$('<img>')
 										.addClass('frieskaartenkabinet-thumb img-thumbnail')
-										.attr('src', 'http://www.frieskaartenkabinet.nl' + kaart.image)
+										.attr('src', 'http://www.frieskaartenkabinet.nl' + kaart.tresoar_image)
 										.appendTo($div);
 
 								var $dl = $('<dl>').appendTo($div);
 
-								if (kaart.titel)
+								if (kaart.tresoar_titel)
 									$dl.append(
 										$('<dt>').text('Titel'),
-										$('<dd>').text(kaart.titel));
+										$('<dd>').text(kaart.tresoar_titel));
 
-								if (kaart.besch)
+								if (kaart.tresoar_besch)
 									$dl.append(
 										$('<dt>').text('Beschrijving'),
-										$('<dd>').text(kaart.besch));
+										$('<dd>').text(kaart.tresoar_besch));
 
-								if (kaart.geo)
+								if (kaart.tresoar_geo)
 									$dl.append(
 										$('<dt>').text('Trefwoord: Geografie'),
-										$('<dd>').text(kaart.geo));
+										$('<dd>').text(kaart.tresoar_geo));
 
-								if (kaart.zaak)
+								if (kaart.tresoar_zaak)
 									$dl.append(
 										$('<dt>').text('Trefwoord: Onderwerp'),
-										$('<dd>').text(kaart.zaak));
+										$('<dd>').text(kaart.tresoar_zaak));
 
-								if (kaart.tekenaar)
+								if (kaart.tresoar_tekenaar)
 									$dl.append(
 										$('<dt>').text('Tekenaar'),
-										$('<dd>').text(kaart.tekenaar));
+										$('<dd>').text(kaart.tresoar_tekenaar));
 
-								if (kaart.graveur)
+								if (kaart.tresoar_graveur)
 									$dl.append(
 										$('<dt>').text('Graveur'),
-										$('<dd>').text(kaart.graveur));
+										$('<dd>').text(kaart.tresoar_graveur));
 
-								if (kaart.jaar1)
+								if (kaart.tresoar_jaar1)
 									$dl.append(
 										$('<dt>').text('Jaartal'),
-										$('<dd>').text(kaart.jaar1));
+										$('<dd>').text(kaart.tresoar_jaar1));
 
-								if (kaart.toeg_nr)
+								if (kaart.tresoar_toeg_nr)
 									$dl.append(
 										$('<dt>').text('Toegangsnummer'),
-										$('<dd>').text(kaart.toeg_nr));
+										$('<dd>').text(kaart.tresoar_toeg_nr));
 
-								if (kaart.invnr)
+								if (kaart.tresoar_invnr)
 									$dl.append(
 										$('<dt>').text('Inventarisnummer'),
-										$('<dd>').text(kaart.invnr));
+										$('<dd>').text(kaart.tresoar_invnr));
 
-								if (kaart.archief)
+								if (kaart.tresoar_archief)
 									$dl.append(
 										$('<dt>').text('Archief'),
-										$('<dd>').text(kaart.archief));
+										$('<dd>').text(kaart.tresoar_archief));
 
-								if (kaart.kaartnr)
+								if (kaart.tresoar_kaartnr)
 									$dl.append(
 										$('<dt>').text('Kaartnummer'),
-										$('<dd>').text(kaart.kaartnr));
+										$('<dd>').text(kaart.tresoar_kaartnr));
 
 
 								return $div;

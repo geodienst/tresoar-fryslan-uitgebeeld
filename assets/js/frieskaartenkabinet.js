@@ -11,7 +11,7 @@ FriesKaartenKabinet.prototype.get = function(kaarnt) {
 			cache: true,
 			dataType: 'jsonp',
 			data: {
-				query: 'doc_type:kaarten_maprecord,id:' + kaarnt,
+				query: 'tresoar_local_id.raw:' + kaarnt,
 				rows: 1,
 				format: 'jsonp'
 			}
