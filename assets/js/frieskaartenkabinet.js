@@ -17,7 +17,7 @@ FriesKaartenKabinet.prototype.get = function(kaarnt) {
 			}
 		}).then(
 			function(response) {
-				return response.result[0].items[0].item.fields;
+				return response.result.items[0].item.fields;
 			},
 			function() {
 				return null;
