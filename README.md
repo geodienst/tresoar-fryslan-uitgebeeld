@@ -1,5 +1,5 @@
 # Fryslan Uitgebeeld
-Dit is de broncode van de oudekaarten-viewer die te vinden is op <a href='https://fryslanuitgebeeld.frl'>https://fryslanuitgebeeld.frl</a>. Dit is alleen het front-end. Het back-end wordt volledig verzorgd door een standaard Geoserver installatie.
+Dit is de broncode van de oudekaarten-viewer die te vinden is op <a href='http://fryslanuitgebeeld.frl'>http://fryslanuitgebeeld.frl</a>. Dit is alleen het front-end. Het back-end wordt volledig verzorgd door een standaard Geoserver installatie.
 
 ## Viewer
 
