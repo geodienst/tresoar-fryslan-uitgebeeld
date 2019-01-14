@@ -320,26 +320,36 @@
 						pattern: /:kaartnummers$/,
 						header: function(feature) {
 							return fkk.get(feature.get('kaartnr')).then(function(kaart){
-
-							    return kaart.tresoar_titel[0].value;
+                                if (kaart === null) {
+                                    return 'niet gevonden';
+                                }
+                                if (!kaart.tresoar_titel) {
+                                    return "geen titel";
+                                }
+								return kaart.tresoar_titel[0].raw;
 							});
 						},
 						content: function(feature) {
 							return fkk.get(feature.get('kaartnr')).then(function(kaart) {
 								var $div = $('<div>');
+
+                                if (kaart === null) {
+                                    return $div;
+                                }
 								
 								$('<a>')
 									.addClass('frieskaartenkabinet-detail-link btn btn-default')
 									.prop('target', '_blank')
-									.prop('href', 'http://www.frieskaartenkabinet.nl/nl/fries-kaartenkabinet/' + kaart.tresoar_slug[0].value)
+									.prop('href', 'http://www.frieskaartenkabinet.nl/nl/fries-kaartenkabinet/' + kaart.tresoar_slug[0].raw)
 									.text('Bekijk in het Fries Kaartenkabinet')
 									.append('<span class="glyphicon glyphicon-new-window">')
 									.appendTo($div);
 
 								if (kaart.tresoar_image)
 									$('<img>')
+
 										.addClass('frieskaartenkabinet-thumb img-thumbnail')
-										.attr('src', kaart.tresoar_image[0].value)
+										.attr('src', kaart.tresoar_image[0].raw)
 										.appendTo($div);
 
 								var $dl = $('<dl>').appendTo($div);
@@ -347,57 +357,57 @@
 								if (kaart.tresoar_titel)
 									$dl.append(
 										$('<dt>').text('Titel'),
-										$('<dd>').text(kaart.tresoar_titel[0].value));
+										$('<dd>').text(kaart.tresoar_titel[0].raw));
 
 								if (kaart.tresoar_besch)
 									$dl.append(
 										$('<dt>').text('Beschrijving'),
-										$('<dd>').text(kaart.tresoar_besch[0].value));
+										$('<dd>').text(kaart.tresoar_besch[0].raw));
 
 								if (kaart.tresoar_geo)
 									$dl.append(
 										$('<dt>').text('Trefwoord: Geografie'),
-										$('<dd>').text(kaart.tresoar_geo[0].value));
+										$('<dd>').text(kaart.tresoar_geo[0].raw));
 
 								if (kaart.tresoar_zaak)
 									$dl.append(
 										$('<dt>').text('Trefwoord: Onderwerp'),
-										$('<dd>').text(kaart.tresoar_zaak[0].value));
+										$('<dd>').text(kaart.tresoar_zaak[0].raw));
 
 								if (kaart.tresoar_tekenaar)
 									$dl.append(
 										$('<dt>').text('Tekenaar'),
-										$('<dd>').text(kaart.tresoar_tekenaar[0].value));
+										$('<dd>').text(kaart.tresoar_tekenaar[0].raw));
 
 								if (kaart.tresoar_graveur)
 									$dl.append(
 										$('<dt>').text('Graveur'),
-										$('<dd>').text(kaart.tresoar_graveur[0].value));
+										$('<dd>').text(kaart.tresoar_graveur[0].raw));
 
 								if (kaart.tresoar_jaar1)
 									$dl.append(
 										$('<dt>').text('Jaartal'),
-										$('<dd>').text(kaart.tresoar_jaar1[0].value));
+										$('<dd>').text(kaart.tresoar_jaar1[0].raw));
 
 								if (kaart.tresoar_toeg_nr)
 									$dl.append(
 										$('<dt>').text('Toegangsnummer'),
-										$('<dd>').text(kaart.tresoar_toeg_nr[0].value));
+										$('<dd>').text(kaart.tresoar_toeg_nr[0].raw));
 
 								if (kaart.tresoar_invnr)
 									$dl.append(
 										$('<dt>').text('Inventarisnummer'),
-										$('<dd>').text(kaart.tresoar_invnr[0].value));
+										$('<dd>').text(kaart.tresoar_invnr[0].raw));
 
 								if (kaart.tresoar_archief)
 									$dl.append(
 										$('<dt>').text('Archief'),
-										$('<dd>').text(kaart.tresoar_archief[0].value));
+										$('<dd>').text(kaart.tresoar_archief[0].raw));
 
 								if (kaart.tresoar_kaartnr)
 									$dl.append(
 										$('<dt>').text('Kaartnummer'),
-										$('<dd>').text(kaart.tresoar_kaartnr[0].value));
+										$('<dd>').text(kaart.tresoar_kaartnr[0].raw));
 
 
 								return $div;
