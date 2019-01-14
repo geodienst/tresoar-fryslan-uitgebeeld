@@ -7,7 +7,7 @@ FriesKaartenKabinet.prototype.get = function(kaarnt) {
 		return this.cache[kaarnt];
 
 	return this.cache[kaarnt] = jQuery.ajax({
-			url: 'http://www.frieskaartenkabinet.nl/api/search/v1/',
+			url: 'http://www.frieskaartenkabinet.nl/api/search/v2/',
 			cache: true,
 			dataType: 'jsonp',
 			data: {
@@ -17,7 +17,12 @@ FriesKaartenKabinet.prototype.get = function(kaarnt) {
 			}
 		}).then(
 			function(response) {
-				return response.result.items[0].item.fields;
+                if (response.result.items.length != 0) {
+                    return response.result.items[0].item.fields;
+                } else {
+                    console.log('no result for kaartnr: ' + kaarnt);
+                    return null;
+                }
 			},
 			function() {
 				return null;
